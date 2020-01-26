@@ -28,7 +28,7 @@ matrix:
         - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf "$HOME/google-cloud-sdk"; curl -o install_gcloud.sh https://sdk.cloud.google.com ; fi
         - nohup bash install_gcloud.sh &
         - for i in $(seq 1 10); do sleep 60; echo $i; done
-        - gcloud components install kubectl --verbosity="debug"
+        - gcloud components install kubectl
       install: true
       script: 
         - gcloud version

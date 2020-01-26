@@ -43,6 +43,27 @@ class KubernetesController():
         except:
             return False
 
+    def setEmailAddress(self, emailAddress):
+        try:
+            self.emailAddress = emailAddress
+            return True
+        except:
+            return False
+
+    def setGoogleClientId(self, googleClientId):
+        try:
+            self.googleClientId = googleClientId
+            return True
+        except:
+            return False
+
+    def setGoogleClientSecret(self, googleClientSecret):
+        try:
+            self.googleClientSecret = googleClientSecret
+            return True
+        except:
+            return False
+
     def setPodId(self, podId):
         try:
             self.setPodId = podId
@@ -72,14 +93,26 @@ class KubernetesController():
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
                 subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName}"],shell=True).wait()
                 fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
-                print("File Exists",f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml",fileCreated)
                 if fileCreated == False:
                     return False
             return True
         except:
             return False
 
-        
+    def generateAuthenticationYamlFiles(self):
+        try:
+            fileList = ["01_deployment", "02_service", "03_ingress"]
+            currentDirectory = self.currentDirectory
+            for file in fileList:
+                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/authentication/{self.serviceName}/{file}"
+                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName} {self.emailAddress} {self.googleClientId} {self.googleClientSecret}"],shell=True).wait()
+                print(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                if fileCreated == False:
+                    return False
+            return True
+        except:
+            return False    
 
 def kubernetesGetPodId(serviceName, userName):
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
@@ -119,11 +152,6 @@ def kubernetesGeneratePodsYaml(clusterName,serviceName,userName):
     print("Generating Pod Yaml",clusterName,serviceName,userName)
     subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"],shell=True).wait()
 
-def kubernetesGenerateServicesYaml(clusterName, serviceName, userName):
-    print("Generating Service Yaml",clusterName,serviceName,userName)
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/02_service.py {clusterName} {serviceName} {userName}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/03_ingress.py {clusterName} {serviceName} {userName}"],shell=True).wait()
 
 def kubernetesGenerateAuthenticationYaml(clusterName, serviceName, userName, emailAddress, googleClientId, googleClientSecret):
     print("Generating Service Yaml",clusterName,serviceName,userName)
