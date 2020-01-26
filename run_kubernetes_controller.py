@@ -116,5 +116,4 @@ def test_deleteAuthenticationYamlFiles():
 
 
 if __name__ == "__main__":
-    test_generateIngressYamlFiles()
-    test_manageIngressPod()
+    test_loadRemoteConfig()

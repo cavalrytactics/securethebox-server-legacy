@@ -7,7 +7,10 @@ airflow/pgdata/
 airflow/airflow.db
 celerybeat-schedule.db
 kube_config.yaml
-app_controllers/secrets/*
+app_controllers/secrets/*.txt
+app_controllers/secrets/*.yml
+app_controllers/secrets/*.yaml
+app_controllers/secrets/*.json
 
 # Logs
 logs

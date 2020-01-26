@@ -7,6 +7,7 @@ import time
 from os import path
 import yaml
 from kubernetes import client, config, utils
+from kubernetes.client import configuration
 
 class KubernetesController():
     def __init__(self):
@@ -19,16 +20,36 @@ class KubernetesController():
         self.googleClientId = ""
         self.googleClientSecret = ""
         self.kubectlAction = ""
+        self.fileName = ""
 
+    def setFileName(self, fileName):
+        try:
+            self.fileName = fileName
+            return True
+        except:
+            return False
+
+    def setTravisEncryptFile(self):
+        try:
+            fullUncryptedFilePath = f"{self.currentDirectory}/app_controllers/secrets/"
+            unencryptedFileName = self.fileName
+            encryptedFileName = f"{unencryptedFileName}.enc"
+            fileCreated = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
+            if fileCreated == True:
+                subprocess.Popen([f"echo 'yes' | travis encrypt-file {fullUncryptedFilePath}{unencryptedFileName} --add"],shell=True).wait()
+                os.rename(f"{self.currentDirectory}/{encryptedFileName}",f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
+                return True
+            else:
+                print("File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
+                return False
+        except:
+            print("You may need to login to Travis")
+            return False
+            
     def loadRemoteConfig(self):
         try:
-            config.load_kube_config()
-            v1 = client.CoreV1Api()
-            print("Listing pods with their IPs:")
-            ret = v1.list_pod_for_all_namespaces(watch=False)
-            for i in ret.items:
-                print("%s\t%s\t%s" %
-                    (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
+            config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
+            print("Active host is %s" % configuration.Configuration().host)
             return True
         except:
             return False
@@ -70,31 +91,35 @@ class KubernetesController():
 
     def setGoogleClientId(self):
         try:
-            filePath = "./app_controllers/secrets/googleClientId.txt"
+            filePath = f"{self.currentDirectory}/app_controllers/secrets/googleClientId.txt"
             fileExists = path.exists(filePath)
             if fileExists == False:
                 with open(filePath, 'w') as file:
                     environmentVariable = os.environ(['GOOGLE_CLIENT_ID'])
                     file.write(environmentVariable)
+                    return True
             else:
                 readGoogleClientIdFile = open(filePath,'r')
                 self.googleClientId = readGoogleClientIdFile.read().rstrip('\n')
-            return True
+                return True
+            return False
         except:
             return False
 
     def setGoogleClientSecret(self):
         try:
-            filePath = "./app_controllers/secrets/googleClientSecret.txt"
+            filePath = f"{self.currentDirectory}/app_controllers/secrets/googleClientSecret.txt"
             fileExists = path.exists(filePath)
             if fileExists == False:
                 with open(filePath, 'w') as file:
                     environmentVariable = os.environ(['GOOGLE_CLIENT_SECRET'])
                     file.write(environmentVariable)
+                    return True
             else:
-                readGoogleClientIdFile = open(filePath,'r')
-                self.googleClientId = readGoogleClientIdFile.read().rstrip('\n')
-            return True
+                readGoogleClientSecretFile = open(filePath,'r')
+                self.googleClientSecret = readGoogleClientSecretFile.read().rstrip('\n')
+                return True
+            return False
         except:
             return False
 
@@ -209,9 +234,8 @@ class KubernetesController():
         except:
             return False
 
-#  depends on file
     def manageIngressPod(self):
-        config.load_kube_config()
+        config.load_kube_config(config_file="./app_controllers/secrets/kubernetesConfig.yml")
         try:
             fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
             currentDirectory = self.currentDirectory
@@ -246,7 +270,7 @@ class KubernetesController():
             return False
 
     def manageAuthenticationPod(self):
-        config.load_kube_config()
+        config.load_kube_config(config_file="./app_controllers/secrets/kubernetesConfig.yml")
         try:
             fileList = ["01_deployment", "02_service", "03_ingress"]
             currentDirectory = self.currentDirectory

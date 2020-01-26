@@ -13,10 +13,21 @@ testData = {
     "kubectlAction_apply": "apply",
     "kubectlAction_delete": "delete",
     "dockerePodId": "pod_id_123",
+    "unencryptedFileNames": ["kubernetesConfig.yml"]
 }
 
 def test_setCurrentDirectory():
     assert kc.setCurrentDirectory() == True
+
+def test_setFileName():
+    for file in testData["unencryptedFileNames"]:
+        assert kc.setFileName(file) == True
+
+def test_setTravisEncryptFile():
+    kc.setCurrentDirectory() == True
+    for file in testData["unencryptedFileNames"]:
+        kc.setFileName(file)
+        assert kc.setTravisEncryptFile() == True
 
 def test_setClusterName():
     assert kc.setClusterName(testData["clusterName"]) == True
@@ -31,9 +42,11 @@ def test_setEmailAddress():
     assert kc.setEmailAddress(testData["emailAddress"]) == True
 
 def test_setGoogleClientId():
+    kc.setCurrentDirectory()
     assert kc.setGoogleClientId() == True
 
 def test_setGoogleClientSecret():
+    kc.setCurrentDirectory()
     assert kc.setGoogleClientSecret() == True
 
 def test_setPodId():
@@ -68,6 +81,7 @@ def test_generateAuthenticationYamlFiles():
     assert kc.generateAuthenticationYamlFiles() == True
 
 # def test_loadRemoteConfig():
+#     kc.setCurrentDirectory()
 #     assert kc.loadRemoteConfig() == True
 
 # def test_manageAuthenticationPod():
