@@ -26,10 +26,15 @@ class GitlabController():
             return False
 
     def setUserName(self, userName):
-        self.userName = userName
+        try:
+            self.userName = userName
+            return True
+        except:
+            return False
 
     def setCurrentDirectory(self, currentDirectory):
         self.currentDirectory = os.getcwd()
+        
     
     def setHttpUrl(self, httpUrl):
         self.httpUrl = httpUrl
