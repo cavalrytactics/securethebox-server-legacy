@@ -23,7 +23,7 @@ course = api.model('Course', {
 
 categories, courses = main()
 fa = FirestoreAcademy()
-firestore_courses = fa.getCourses()
+
 
 @api.route('/categories')
 class AcademyCategories(Resource):
@@ -37,6 +37,7 @@ class AcademyCategories(Resource):
 class AcademyCourses(Resource):
     @api.doc('get_courses')
     def get(self):
+        firestore_courses = fa.getCourses()
         return firestore_courses, 200, {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"} 
 
 @api.route('/course')
@@ -45,6 +46,7 @@ class AcademyCourse(Resource):
     def get(self):
         args = academy_parser.parse_args()
         try:
+            firestore_courses = fa.getCourses()
             for i in firestore_courses:
                 if i["id"] == args['courseId']:
                     return i, 201, {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"} 
@@ -58,6 +60,7 @@ class AcademyCourseUpdate(Resource):
     def post(self):
         args = academy_course_update_parser.parse_args()
         try:
+            firestore_courses = fa.getCourses()
             for i,v in enumerate(firestore_courses):
                 if v["id"] == args["id"]:
                     firestore_courses[i]["activeStep"] = args['activeStep']
@@ -73,6 +76,7 @@ class AcademyCourseSave(Resource):
     def post(self):
         args = academy_course_save_parser.parse_args()
         try:
+            firestore_courses = fa.getCourses()
             for i,v in enumerate(firestore_courses):
                 if v["id"] == args["id"]:
                     firestore_courses[i] = args['data']

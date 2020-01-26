@@ -13,6 +13,10 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: traefik
     external-dns.alpha.kubernetes.io/target: {serviceName}.{clusterName}.securethebox.us
+    ingress.kubernetes.io/auth-trust-headers: true
+    ingress.kubernetes.io/auth-type: forward
+    ingress.kubernetes.io/auth-url: http://auth
+    ingress.kubernetes.io/auth-response-headers: X-Forwarded-User
 spec:
   rules:
     - host: {serviceName}.{clusterName}.securethebox.us
@@ -24,7 +28,7 @@ spec:
             servicePort: admin
               """
 
-    with open('./kubernetes-deployments/ingress/'+str(sys.argv[2])+'/06_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-ingress.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/ingress/'+str(sys.argv[2])+'/06_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-ingress.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

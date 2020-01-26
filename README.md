@@ -6,10 +6,30 @@
  - https://desktop.github.com/
 - Docker for Desktop
   - https://www.docker.com/products/docker-desktop
-- Kubernetes helm
-  - https://github.com/helm/helm
+- Kubernetes helm 2.16.1
+  - https://get.helm.sh/helm-v2.16.1-darwin-amd64.tar.gz
+  - ```tar -zxvf helm-v2.16.1-darwin-amd64.tar.gz```
+  - ```mv darwin-amd64/helm /usr/local/bin/helm```
+  - ```open /usr/local/bin/```
+  - right-click helm and open
 - nodejs 12.x & npm 6.x
   - https://nodejs.org/en/
+- dnsmasq dynamic dns assignment
+  - https://www.stevenrombauts.be/2018/01/use-dnsmasq-instead-of-etc-hosts/
+  - ```sudo nano /usr/local/etc/dnsmasq.conf```
+    ``` 
+    address=/us-west1-a.securethebox.us/127.0.0.1
+    conf-dir=/usr/local/etc/dnsmasq.d,*.conf
+    no-resolv
+    server=8.8.8.8
+    server=4.4.2.2
+    ```
+  - ```mkdir -p /usr/local/etc/dnsmasq.d```
+  - ```nano /usr/local/etc/dnsmasq.d/development.conf```
+    ```
+    address=/.securethebox.us/127.0.0.1
+    ```
+  - ```sudo brew services restart dnsmasq```
 
 ## Windows Developer Requirements
 Note: Use Chocolatly Package Manager https://chocolatey.org/
@@ -173,3 +193,4 @@ securethebox_server
 │
 └── requirements.txt (required python libraries)
 ```
+

@@ -7,7 +7,7 @@ apiVersion: extensions/v1beta1
 metadata:
   name: {serviceName}-{clusterName}-ingress-controller
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
@@ -21,7 +21,7 @@ spec:
             name: traefik-config
       containers:
       - name: traefik
-        image: "traefik:latest"
+        image: "traefik:1.7"
         volumeMounts:
           - mountPath: "/etc/traefik/config"
             name: config
@@ -32,7 +32,7 @@ spec:
         - --logLevel=DEBUG
               """
 
-    with open('./kubernetes-deployments/ingress/'+str(sys.argv[2])+'/04_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-deployment.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/ingress/'+str(sys.argv[2])+'/04_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-deployment.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

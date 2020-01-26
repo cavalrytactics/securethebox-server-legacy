@@ -24,7 +24,7 @@ spec:
   type: LoadBalancer
               """
 
-    with open('./kubernetes-deployments/ingress/'+str(sys.argv[2])+'/05_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-service.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/ingress/'+str(sys.argv[2])+'/05_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-service.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

@@ -6,6 +6,8 @@ config/prod.json
 airflow/pgdata/
 airflow/airflow.db
 celerybeat-schedule.db
+kube_config.yaml
+app_controllers/secrets/*
 
 # Logs
 logs

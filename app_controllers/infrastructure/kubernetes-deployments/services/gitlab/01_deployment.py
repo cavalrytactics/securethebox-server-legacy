@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: {serviceName}-{userName}
-        image: gitlab/gitlab-ce:latest
+        image: gitlab/gitlab-ce:11.11.3-ce.0
         ports:
           - containerPort: 80
           - containerPort: 443
@@ -50,7 +50,7 @@ spec:
           path: /var/run/docker.sock
               """
 
-    with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

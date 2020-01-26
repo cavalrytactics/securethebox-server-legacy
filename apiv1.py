@@ -6,6 +6,7 @@ from app_routes.namespace_challenges import api as ns2
 from app_routes.namespace_applications import api as ns3
 from app_routes.namespace_helm import api as ns4
 from app_routes.namespace_kubernetes import api as ns5
+from app_routes.namespace_airflow import api as ns6
 
 blueprint = Blueprint('apiv1', __name__)
 
@@ -15,3 +16,4 @@ api.add_namespace(ns2)
 api.add_namespace(ns3)
 api.add_namespace(ns4)
 api.add_namespace(ns5)
+api.add_namespace(ns6)

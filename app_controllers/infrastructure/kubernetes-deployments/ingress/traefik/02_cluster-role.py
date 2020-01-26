@@ -48,7 +48,7 @@ subjects:
   namespace: default
               """
 
-    with open('./kubernetes-deployments/ingress/'+str(sys.argv[2])+'/02_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-cluster-role.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/ingress/'+str(sys.argv[2])+'/02_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-cluster-role.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

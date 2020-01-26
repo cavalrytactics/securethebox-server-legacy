@@ -16,7 +16,8 @@
     "docker-b": "python git_scripts.py docker-build",
     "docker-r": "python git_scripts.py docker-run",
     "docker-k": "python git_scripts.py docker-kill-all",
-    "images-a": "python git_scripts.py docker-images-delete-all"
+    "images-a": "python git_scripts.py docker-images-delete-all",
+    "kill": "sudo lsof -t -i tcp:5000  | xargs kill"
   },
   "repository": {
     "type": "git",

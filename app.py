@@ -17,7 +17,7 @@ api = Api(app=app)
 app.register_blueprint(apiv1, url_prefix='/api/v1')
 # Api v2 - future features
 app.register_blueprint(apiv2, url_prefix='/api/v2')
-cors = CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*", "methods":["GET","POST"]}})
 
 if __name__ == '__main__':
     # Look for environment variable APPENV

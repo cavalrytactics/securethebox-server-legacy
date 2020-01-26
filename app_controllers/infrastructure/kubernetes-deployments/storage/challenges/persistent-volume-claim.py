@@ -15,7 +15,7 @@ spec:
       storage: 3Gi
               """
 
-    with open('./kubernetes-deployments/storage/challenges/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-pvc.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/storage/challenges/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-pvc.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 if __name__ == "__main__":

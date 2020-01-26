@@ -13,6 +13,9 @@ data:
     [entryPoints]
       [entryPoints.http]
       address = ":80"
+      [entryPoints.http.auth.forward]
+      address = "http://auth"
+      authResponseHeaders = ["X-Forwarded-User"]
       #   [entryPoints.http.redirect]
       #     entryPoint = "https"
       # [entryPoints.https]
@@ -25,7 +28,7 @@ data:
       idleTimeout = "620s"
               """
 
-    with open('./kubernetes-deployments/ingress/'+str(sys.argv[2])+'/03_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-config.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/ingress/'+str(sys.argv[2])+'/03_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-config.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

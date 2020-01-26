@@ -24,20 +24,21 @@ def gitlabCreateProject(clusterName, userName):
     3. delete existing git
     4. commit,push to gitlab
     """
-    os.chdir('../repositories')
+    currentPath  = os.getcwd()
+    os.chdir(currentPath+'/app_controllers/repositories')
     print("CWD:",os.getcwd())
     print("DELETING EXISTING PROJECT")
     subprocess.Popen([f"rm -rf juice-shop-"+userName],shell=True).wait()
     # make sure this server has 'git' installed
     subprocess.Popen([f"git clone https://github.com/ncmd/juice-shop.git juice-shop-"+userName],shell=True).wait()
-    os.chdir('./juice-shop-'+userName)
+    os.chdir(currentPath+'/app_controllers/repositories/juice-shop-'+userName)
     print("CWD:",os.getcwd())
     subprocess.Popen([f"rm -rf .git"],shell=True).wait()
     subprocess.Popen([f"git init"],shell=True).wait()
     subprocess.Popen([f"git add ."],shell=True).wait()
     subprocess.Popen([f"git commit -m 'production app'"],shell=True).wait()
     subprocess.Popen([f"git push --set-upstream http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName+".git master"],shell=True).wait()
-
+    os.chdir(currentPath)
 
 def gitlabGetResetPasswordToken(clusterName,userName):
     url = "http://gitlab-"+userName+"."+clusterName+".securethebox.us"
@@ -83,9 +84,9 @@ def gitlabPostResetPassword(token,session,clusterName,userName):
     # 5. Submit token form
     # 6. Follow redirect to generated personal access token
 
-def gitlabCreatePersonalAccessToken():
-    # 1
-    url1 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+def gitlabCreatePersonalAccessToken(userName, clusterName):
+     # 1
+    url1 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     response1 = requests.request("GET", url1)
     session_cookie1 = response1.headers['Set-Cookie'].split(';')
     # print("Guest Session Cookie:",session_cookie1[0])
@@ -94,26 +95,25 @@ def gitlabCreatePersonalAccessToken():
     # print("Guest authenticity_token:",authtoken[0].value)
     new_auth_token = urllib.parse.quote(authtoken[0].value)
     # print("Guest Encoded authenticity_token:",new_auth_token)
-
+    print("1 - new_auth_token",new_auth_token)
     # 2
-    url2 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+    url2 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     payload = "utf8=%E2%9C%93&authenticity_token="+new_auth_token+"&user%5Blogin%5D=root&user%5Bpassword%5D=Changeme&user%5Bremember_me%5D=0"
     headers = {
         'Content-Type': "application/x-www-form-urlencoded",
-        'Host': "gitlab-charles.us-west1-a.securethebox.us",
+        'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
         'Cookie': session_cookie1[0]
         }
     response2 = requests.request("POST", url2, data=payload, headers=headers, allow_redirects=True)
     session_cookie2 = response2.request.headers['Cookie']
-    # print("User Session Cookie2:",session_cookie2)
     tree2 = html.fromstring(response2.content)
     authtoken2 = tree2.xpath('//input[@name="authenticity_token"]')
     print("User authenticity_token2:",authtoken2)
     # 3
-    url3 = "http://gitlab-charles.us-west1-a.securethebox.us/profile/personal_access_tokens"
+    url3 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/profile/personal_access_tokens"
     headers3 = {
     'Content-Type': "application/x-www-form-urlencoded",
-    'Host': "gitlab-charles.us-west1-a.securethebox.us",
+    'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
     'Cookie': session_cookie2
     }
     response3 = requests.request("GET", url3, headers=headers3)
@@ -127,11 +127,11 @@ def gitlabCreatePersonalAccessToken():
     now = datetime.datetime.now()
     year100 = now.year + 100
     print(year100)
-    url4 = "http://gitlab-charles.us-west1-a.securethebox.us/profile/personal_access_tokens"
-    payload = "utf8=%E2%9C%93&authenticity_token="+urllib.parse.quote(authtoken3[0].attrib['content'])+"&personal_access_token%5Bname%5D=jenkins-charles-root&personal_access_token%5Bexpires_at%5D="+str(year100)+"-"+str(now.day)+"-"+str(now.month)+"&personal_access_token%5Bscopes%5D%5B%5D=api&personal_access_token%5Bscopes%5D%5B%5D=read_user&personal_access_token%5Bscopes%5D%5B%5D=read_repository&personal_access_token%5Bscopes%5D%5B%5D=write_repository&personal_access_token%5Bscopes%5D%5B%5D=sudo"
+    url4 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/profile/personal_access_tokens"
+    payload = "utf8=%E2%9C%93&authenticity_token="+urllib.parse.quote(authtoken3[0].attrib['content'])+"&personal_access_token%5Bname%5D=jenkins-"+str(userName)+"-root&personal_access_token%5Bexpires_at%5D="+str(year100)+"-"+str(now.day)+"-"+str(now.month)+"&personal_access_token%5Bscopes%5D%5B%5D=api&personal_access_token%5Bscopes%5D%5B%5D=read_user&personal_access_token%5Bscopes%5D%5B%5D=read_repository&personal_access_token%5Bscopes%5D%5B%5D=write_repository&personal_access_token%5Bscopes%5D%5B%5D=sudo"
     headers4 = {
         'Content-Type': "application/x-www-form-urlencoded",
-        'Host': "gitlab-charles.us-west1-a.securethebox.us",
+        'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
         'Cookie': session_cookie3,
         'accept-encoding': "gzip, deflate",
         'Connection': "keep-alive"
@@ -141,9 +141,9 @@ def gitlabCreatePersonalAccessToken():
     print(response4.status_code)
 
     # 5
-    url5 = "http://gitlab-charles.us-west1-a.securethebox.us/profile/personal_access_tokens"
+    url5 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/profile/personal_access_tokens"
     headers5 = {
-        'Host': "gitlab-charles.us-west1-a.securethebox.us",
+        'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
         'Cookie': session_cookie3
         }
     response5 = requests.request("GET", url5, headers=headers5)
@@ -376,16 +376,11 @@ def gitlabProjectAddWebhook(clusterName,userName):
     payload4 = "utf8=%E2%9C%93&authenticity_token="+auth_token4+"&hook%5Burl%5D=http%3A%2F%2Fjenkins-charles%3A8080%2Fproject%2Fdeploy-to-kubernetes&hook%5Btoken%5D=&hook%5Bpush_events%5D=0&hook%5Bpush_events%5D=1&hook%5Bpush_events_branch_filter%5D=&hook%5Btag_push_events%5D=0&hook%5Bnote_events%5D=0&hook%5Bconfidential_note_events%5D=0&hook%5Bissues_events%5D=0&hook%5Bconfidential_issues_events%5D=0&hook%5Bmerge_requests_events%5D=0&hook%5Bjob_events%5D=0&hook%5Bpipeline_events%5D=0&hook%5Bwiki_page_events%5D=0&hook%5Benable_ssl_verification%5D=0"
     response4 = requests.request("POST", url4, headers=headers4, data=payload4, allow_redirects=True)
     print("Response code:",response4.status_code)
+    print("Response code:",response4.content)
 
 def main():
     try:
-        reset_token,session_cookie = gitlabGetResetPasswordToken('us-west1-a','charles')
-        gitlabPostResetPassword(reset_token,session_cookie,'us-west1-a','charles')
-        gitlabCreateProject('us-west1-a', 'charles')
-        gitlabMakeProjectPublic('us-west1-a', 'charles')
-        gitlabProjectAllowOutbound('us-west1-a', 'charles')
-        gitlabProjectAddWebhook('us-west1-a', 'charles')
-
+        gitlabCreatePersonalAccessToken("charles","us-west1-a")
         # Install deploy key
         # public_key = jenkinsGetSSHPublicKey('jenkins','charles')
         # gitlabProjectAddDeployKey(public_key)

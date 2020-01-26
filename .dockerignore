@@ -7,3 +7,4 @@ node_modules/
 venv/
 airflow/pgdata/
 airflow/airflow.db
+app_controllers/respositories/*

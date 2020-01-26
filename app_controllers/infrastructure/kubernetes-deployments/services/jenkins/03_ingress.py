@@ -10,7 +10,10 @@ metadata:
     kubernetes.io/ingress.class: traefik
     kubernetes.io/preserve-host: "true"
     traefik.frontend.passHostHeader: "false"
-    traefik.frontend.priority: "1"
+    ingress.kubernetes.io/auth-trust-headers: true
+    ingress.kubernetes.io/auth-type: forward
+    ingress.kubernetes.io/auth-url: http://auth
+    ingress.kubernetes.io/auth-response-headers: X-Forwarded-User
 spec:
   rules:
   - host: {serviceName}-{userName}.{clusterName}.securethebox.us
@@ -23,7 +26,7 @@ spec:
 
               """
 
-    with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/03_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-ingress.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/03_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-ingress.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 # usage:

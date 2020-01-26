@@ -5,12 +5,27 @@ from ..services.nginx import (
     nginxGenerateConfig,
     nginxDeleteConfig,
 )
+import urllib3
+
+import google.auth
+from google.auth.transport.requests import AuthorizedSession
+import google.oauth2.credentials
+from google.oauth2 import service_account
+from google.auth import impersonated_credentials
+
+urllib3.disable_warnings()
+credentials = service_account.Credentials.from_service_account_file('./app_controllers/secrets/oauth2.json')
+scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/userinfo.profile','https://www.googleapis.com/auth/userinfo.email'])
+print("CREDENTIALS:",scoped_credentials)
+authed_session = AuthorizedSession(scoped_credentials)
+print("AUTHORIZED:", authed_session)
+
 
 # Install Nginx on Container/Pod
 def modsecuritySetup(clusterName, serviceName, userName):
     print("Checking if Service up with GET request")
     try:
-        response = requests.request("GET", 'http://nginx-modsecurity-charles.us-west1-a.securethebox.us')
+        response = authed_session.get('http://nginx-modsecurity-charles.us-west1-a.securethebox.us')
         print(response.text)
     except:
         print("Cannot get response...")

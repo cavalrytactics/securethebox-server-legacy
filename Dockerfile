@@ -8,7 +8,7 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN pip3 install virtualenv
 RUN python3.7 -m virtualenv venv
 ENV PATH="./venv/bin:$PATH"
-ENV APPENV="PROD"
+ENV APPENV=${APPENV}
 
 RUN . venv/bin/activate
 RUN pip3 install -r requirements.txt
