@@ -1,6 +1,7 @@
 branches:
   only:
   - master
+  - testing-00001
 
 matrix:
   include:
