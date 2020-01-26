@@ -25,12 +25,23 @@ matrix:
       services: 
         - docker
       before_install:
-        - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf "$HOME/google-cloud-sdk"; curl -o install_gcloud.sh https://sdk.cloud.google.com ; fi
-        - nohup bash install_gcloud.sh &
-        - for i in $(seq 1 10); do sleep 60; echo $i; done
+        - echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+        - curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+        - sudo apt-get update -y 
+        - sudo apt-get install google-cloud-sdk -y
+        # - nohup bash install_gcloud.sh &
+        # - for i in $(seq 1 10); do sleep 60; echo $i; done
         - gcloud components install kubectl
       install: true
       script: 
         - gcloud version
         - kubectl version
         - pytest tests/test_kubernetes_controller.py
+# Add the Cloud SDK distribution URI as a package source
+
+
+# Import the Google Cloud Platform public key
+
+
+# Update the package list and install the Cloud SDK
+sudo apt-get update && sudo apt-get install google-cloud-sdk

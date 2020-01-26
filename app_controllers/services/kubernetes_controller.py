@@ -112,7 +112,43 @@ class KubernetesController():
                     return False
             return True
         except:
-            return False    
+            return False
+
+    def deleteIngressYamlFiles(self):
+        try:
+            fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
+            currentDirectory = self.currentDirectory
+            for file in fileList:
+                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
+                try:
+                    subprocess.Popen([f"rm -rf {fullFilePath}-{self.clusterName}-{self.serviceName}.yml"],shell=True).wait()
+                except:
+                    continue
+                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                if fileCreated == True:
+                    print(fileCreated, f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                    return False 
+            return True
+        except:
+            return False
+
+    def deleteServiceYamlFiles(self):
+        try:
+            fileList = ["01_deployment", "02_service", "03_ingress"]
+            currentDirectory = self.currentDirectory
+            for file in fileList:
+                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
+                try:
+                    subprocess.Popen([f"rm -rf {fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml"],shell=True).wait()
+                except:
+                    continue
+                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                print(fileCreated)
+                if fileCreated == True:
+                    return False 
+            return True
+        except:
+            return False
 
 def kubernetesGetPodId(serviceName, userName):
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
@@ -151,22 +187,6 @@ def kubernetesGetPodStatus(podId):
 def kubernetesGeneratePodsYaml(clusterName,serviceName,userName):
     print("Generating Pod Yaml",clusterName,serviceName,userName)
     subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"],shell=True).wait()
-
-
-def kubernetesGenerateAuthenticationYaml(clusterName, serviceName, userName, emailAddress, googleClientId, googleClientSecret):
-    print("Generating Service Yaml",clusterName,serviceName,userName)
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/authentication/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName} {emailAddress} {googleClientId} {googleClientSecret}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/authentication/{serviceName}/02_service.py {clusterName} {serviceName} {userName}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/authentication/{serviceName}/03_ingress.py {clusterName} {serviceName} {userName}"],shell=True).wait()
-
-def kubernetesDeleteIngressYaml(clusterName, serviceName):
-    print("Deleting Ingress Yaml")
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/01_{clusterName}-{serviceName}-permissions.yml"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/02_{clusterName}-{serviceName}-cluster-role.yml"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/03_{clusterName}-{serviceName}-config.yml"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/04_{clusterName}-{serviceName}-deployment.yml"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/05_{clusterName}-{serviceName}-service.yml"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/06_{clusterName}-{serviceName}-ingress.yml"],shell=True).wait()
 
 def kubernetesDeleteServicesYaml(clusterName,serviceName, userName):
     print("Deleting Service Yaml")

@@ -34,21 +34,21 @@ def test_setPodId():
     assert kc.setPodId("podid") == True
 
 def test_generateIngressYamlFiles():
-    kc.setCurrentDirectory() == True
+    kc.setCurrentDirectory()
     kc.setClusterName(testData["clusterName"])
     kc.setServiceName(testData["serviceName_ingress"])
     kc.setUserName(testData["userName"])
     assert kc.generateIngressYamlFiles() == True
 
 def test_generateServiceYamlFiles():
-    kc.setCurrentDirectory() == True
+    kc.setCurrentDirectory()
     kc.setClusterName(testData["clusterName"])
     kc.setServiceName(testData["serviceName_service"])
     kc.setUserName(testData["userName"])
     assert kc.generateServiceYamlFiles() == True
 
 def test_generateAuthenticationYamlFiles():
-    kc.setCurrentDirectory() == True
+    kc.setCurrentDirectory()
     kc.setClusterName(testData["clusterName"])
     kc.setServiceName(testData["serviceName_authentication"])
     kc.setUserName(testData["userName"])
@@ -56,3 +56,10 @@ def test_generateAuthenticationYamlFiles():
     kc.setGoogleClientId(testData["googleClientId"])
     kc.setGoogleClientSecret(testData["googleClientSecret"])
     assert kc.generateAuthenticationYamlFiles() == True
+
+def test_deleteIngressYamlFiles():
+    kc.setCurrentDirectory()
+    kc.setClusterName(testData["clusterName"])
+    kc.setServiceName(testData["serviceName_ingress"])
+    kc.setUserName(testData["userName"])
+    assert kc.deleteIngressYamlFiles() == True
