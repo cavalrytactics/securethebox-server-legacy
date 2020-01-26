@@ -98,8 +98,12 @@ class KubernetesController():
                     file.write(environmentVariable)
                     return True
             else:
-                readGoogleClientIdFile = open(filePath,'r')
-                self.googleClientId = readGoogleClientIdFile.read().rstrip('\n')
+                try:
+                    readGoogleClientIdFile = open(filePath,'r')
+                    self.googleClientId = readGoogleClientIdFile.read().rstrip('\n')
+                except:
+                    environmentVariable = os.environ(['GOOGLE_CLIENT_ID'])
+                    self.googleClientId = environmentVariable
                 return True
         except:
             return False
@@ -114,8 +118,12 @@ class KubernetesController():
                     file.write(environmentVariable)
                     return True
             else:
-                readGoogleClientSecretFile = open(filePath,'r')
-                self.googleClientSecret = readGoogleClientSecretFile.read().rstrip('\n')
+                try:
+                    readGoogleClientSecretFile = open(filePath,'r')
+                    self.googleClientSecret = readGoogleClientSecretFile.read().rstrip('\n')
+                except:
+                    environmentVariable = os.environ(['GOOGLE_CLIENT_SECRET'])
+                    self.googleClientSecret = environmentVariable
                 return True
         except:
             return False

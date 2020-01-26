@@ -65,7 +65,7 @@ class GitControl():
         elif self.arguments[0] == "git-push-master":
             self.pytestCheck()
             if self.pytest_result == True:
-                subprocess.Popen([f"git checkout master && git cz ; git push"],shell=True).wait()
+                subprocess.Popen([f"git checkout master && git add . && git cz ; git push"],shell=True).wait()
             else:
                 print("PYTEST FAILED!")
         
