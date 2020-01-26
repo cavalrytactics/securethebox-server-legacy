@@ -74,6 +74,7 @@ class GitControl():
             self.pytestCheck()
             if self.pytest_result == True:
                 if self.git_current_branch != "master":
+                    subprocess.Popen([f"git add ."],shell=True).wait()
                     subprocess.Popen([f"git cz && git push --set-upstream origin "+self.git_current_branch+" && cross-var \"open https://github.com/"+self.git_user+"/"+self.git_fork_name+"/compare/master..."+self.git_user+":"+self.git_current_branch+"?expand=1\""],shell=True).wait()
                 else:
                     print("YOU ARE NOT CHECKOUT TO A BRANCH! git checkout -b \"TICKET-ID\"")

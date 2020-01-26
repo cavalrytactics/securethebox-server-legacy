@@ -28,7 +28,7 @@ class KubernetesController():
             return True
         except:
             return False
-
+            
     def setTravisEncryptFile(self):
         try:
             fullUncryptedFilePath = f"{self.currentDirectory}/app_controllers/secrets/"
