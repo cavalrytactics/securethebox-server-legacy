@@ -5,6 +5,7 @@ import subprocess
 from subprocess import check_output
 import time
 from os import path
+from os import environ
 import yaml
 from kubernetes import client, config, utils
 from kubernetes.client import configuration
@@ -88,47 +89,14 @@ class KubernetesController():
         except:
             return False
 
-    def setGoogleClientId(self):
+    def setEnvironmentVariable(self, environmentVariable):
         try:
-            filePath = f"{self.currentDirectory}/app_controllers/secrets/googleClientId.txt"
-            fileExists = path.exists(filePath)
-            if fileExists == False:
-                with open(filePath, 'w') as file:
-                    environmentVariable = os.environ(['GOOGLE_CLIENT_ID'])
-                    file.write(environmentVariable)
-                    self.googleClientId= environmentVariable
-                    return True
+            if os.getenv(environmentVariable) is not None:
+                setattr(self, environmentVariable, os.getenv(environmentVariable))
             else:
-                try:
-                    readGoogleClientIdFile = open(filePath,'r')
-                    self.googleClientId = readGoogleClientIdFile.read().rstrip('\n')
-                    return True
-                except:
-                    environmentVariable = os.environ(['GOOGLE_CLIENT_ID'])
-                    self.googleClientId = environmentVariable
-                    return True
-        except:
-            return False
-
-    def setGoogleClientSecret(self):
-        try:
-            filePath = f"{self.currentDirectory}/app_controllers/secrets/googleClientSecret.txt"
-            fileExists = path.exists(filePath)
-            if fileExists == False:
-                with open(filePath, 'w') as file:
-                    environmentVariable = os.environ(['GOOGLE_CLIENT_SECRET'])
-                    file.write(environmentVariable)
-                    self.googleClientSecret = environmentVariable
-                    return True
-            else:
-                try:
-                    readGoogleClientSecretFile = open(filePath,'r')
-                    self.googleClientSecret = readGoogleClientSecretFile.read().rstrip('\n')
-                    return True
-                except:
-                    environmentVariable = os.environ(['GOOGLE_CLIENT_SECRET'])
-                    self.googleClientSecret = environmentVariable
-                    return True
+                print(f"{environmentVariable} is not set")
+                return False
+            return True
         except:
             return False
 
@@ -180,7 +148,7 @@ class KubernetesController():
             currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/authentication/{self.serviceName}/{file}"
-                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName} {self.emailAddress} {self.googleClientId} {self.googleClientSecret}"],shell=True).wait()
+                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName} {self.emailAddress} {self.GOOGLE_CLIENT_ID} {self.GOOGLE_CLIENT_SECRET}"],shell=True).wait()
                 fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
                 if fileCreated == False:
                     return False

@@ -13,7 +13,8 @@ testData = {
     "kubectlAction_apply": "apply",
     "kubectlAction_delete": "delete",
     "dockerePodId": "pod_id_123",
-    "unencryptedFileNames": ["kubernetesConfig.yml"]
+    "unencryptedFileNames": ["kubernetesConfig.yml"],
+    "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]
 }
 
 def test_setCurrentDirectory():
@@ -41,13 +42,16 @@ def test_setUserName():
 def test_setEmailAddress():
     assert kc.setEmailAddress(testData["emailAddress"]) == True
 
-def test_setGoogleClientId():
-    kc.setCurrentDirectory()
-    assert kc.setGoogleClientId() == True
+def test_setEnvironmentVariables():
+    for var in testData["environmentVariablesList"]:
+        assert kc.setEnvironmentVariable(var) == True
+# def test_setGoogleClientId():
+#     kc.setCurrentDirectory()
+#     assert kc.setGoogleClientId() == True
 
-def test_setGoogleClientSecret():
-    kc.setCurrentDirectory()
-    assert kc.setGoogleClientSecret() == True
+# def test_setGoogleClientSecret():
+#     kc.setCurrentDirectory()
+#     assert kc.setGoogleClientSecret() == True
 
 def test_setPodId():
     assert kc.setPodId(testData["dockerePodId"]) == True
@@ -76,8 +80,8 @@ def test_generateAuthenticationYamlFiles():
     kc.setServiceName(testData["serviceName_authentication"])
     kc.setUserName(testData["userName"])
     kc.setEmailAddress(testData["emailAddress"])
-    kc.setGoogleClientId()
-    kc.setGoogleClientSecret()
+    for var in testData["environmentVariablesList"]:
+        assert kc.setEnvironmentVariable(var)
     assert kc.generateAuthenticationYamlFiles() == True
 
 def test_loadRemoteConfig():
@@ -119,5 +123,7 @@ def test_deleteAuthenticationYamlFiles():
     kc.setClusterName(testData["clusterName"])
     kc.setServiceName(testData["serviceName_authentication"])
     kc.setUserName(testData["userName"])
+    for var in testData["environmentVariablesList"]:
+        assert kc.setEnvironmentVariable(var)
     assert kc.deleteAuthenticationYamlFiles() == True
 
