@@ -16,9 +16,14 @@ matrix:
     - language: python
       os: linux
       python: 3.7
+      env:
+        global: CLOUDSDK_CORE_DISABLE_PROMPTS=1 
+      cache:
+      directories: $HOME/google-cloud-sdk
       services: 
         - docker
       before_install:
+        - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf "$HOME/google-cloud-sdk"; curl https://sdk.cloud.google.com | bash > /dev/null; fi
         - curl https://sdk.cloud.google.com | bash > /dev/null
         - source $HOME/google-cloud-sdk/path.bash.inc
         - gcloud components install kubectl --verbosity="debug"
