@@ -17,7 +17,9 @@ matrix:
       os: linux
       python: 3.7
       env:
-        global: CLOUDSDK_CORE_DISABLE_PROMPTS=1 
+        global: 
+          - CLOUDSDK_CORE_DISABLE_PROMPTS=1 
+          - CLOUDSDK_INSTALL_DIR = $HOME/google-cloud-sdk
       cache:
         directories: $HOME/google-cloud-sdk
       services: 
@@ -26,8 +28,9 @@ matrix:
         - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf "$HOME/google-cloud-sdk"; curl -o install_gcloud.sh https://sdk.cloud.google.com ; fi
         - nohup bash install_gcloud.sh &
         - for i in $(seq 1 10); do sleep 60; echo $i; done
-        - source $HOME/google-cloud-sdk/path.bash.inc
         - gcloud components install kubectl --verbosity="debug"
+      install: true
       script: 
+        - gcloud version
         - kubectl version
         - pytest tests/test_kubernetes_controller.py

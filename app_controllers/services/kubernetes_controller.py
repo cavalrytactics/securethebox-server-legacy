@@ -1,14 +1,48 @@
 import subprocess
 import json
 import os 
+import subprocess
 from subprocess import check_output
 import time
+import os.path
+from os import path
 
 class KubernetesController():
     def __init__(self):
         self.podId = ""
         self.currentDirectory = ""
+        self.clusterName = ""
+        self.serviceName = ""
+        self.userName = ""
+
+    def setCurrentDirectory(self):
+        try:
+            self.currentDirectory = os.getcwd()
+            return True
+        except:
+            return False
     
+    def setClusterName(self, clusterName):
+        try:
+            self.clusterName = clusterName
+            return True
+        except:
+            return False
+    
+    def setServiceName(self, serviceName):
+        try:
+            self.serviceName = serviceName
+            return True
+        except:
+            return False
+
+    def setUserName(self, userName):
+        try:
+            self.userName = userName
+            return True
+        except:
+            return False
+
     def setPodId(self, podId):
         try:
             self.setPodId = podId
@@ -16,14 +50,34 @@ class KubernetesController():
         except:
             return False
     
-    def generateIngressYaml(self, clusterName,serviceName):
-        print("Generating Ingress Yaml",clusterName,serviceName)
-        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/01_permissions.py {clusterName} {serviceName}"],shell=True).wait()
-        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/02_cluster-role.py {clusterName} {serviceName}"],shell=True).wait()
-        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/03_config.py {clusterName} {serviceName}"],shell=True).wait()
-        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/04_deployment.py {clusterName} {serviceName}"],shell=True).wait()
-        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/05_service.py {clusterName} {serviceName}"],shell=True).wait()
-        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/06_ingress.py {clusterName} {serviceName}"],shell=True).wait()
+    def generateIngressYamlFiles(self):
+        try:
+            fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
+            currentDirectory = self.currentDirectory
+            for file in fileList:
+                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
+                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName}"],shell=True).wait()
+                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                if fileCreated == False:
+                    return False
+            return True
+        except:
+            return False
+
+    def generateServiceYamlFiles(self):
+        try:
+            fileList = ["01_deployment", "02_service", "03_ingress"]
+            currentDirectory = self.currentDirectory
+            for file in fileList:
+                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
+                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName}"],shell=True).wait()
+                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                print("File Exists",f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml",fileCreated)
+                if fileCreated == False:
+                    return False
+            return True
+        except:
+            return False
 
         
 
