@@ -7,6 +7,7 @@ import time
 class KubernetesController():
     def __init__(self):
         self.podId = ""
+        self.currentDirectory = ""
     
     def setPodId(self, podId):
         try:
@@ -14,6 +15,16 @@ class KubernetesController():
             return True
         except:
             return False
+    
+    def generateIngressYaml(self, clusterName,serviceName):
+        print("Generating Ingress Yaml",clusterName,serviceName)
+        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/01_permissions.py {clusterName} {serviceName}"],shell=True).wait()
+        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/02_cluster-role.py {clusterName} {serviceName}"],shell=True).wait()
+        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/03_config.py {clusterName} {serviceName}"],shell=True).wait()
+        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/04_deployment.py {clusterName} {serviceName}"],shell=True).wait()
+        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/05_service.py {clusterName} {serviceName}"],shell=True).wait()
+        subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/06_ingress.py {clusterName} {serviceName}"],shell=True).wait()
+
         
 
 def kubernetesGetPodId(serviceName, userName):
@@ -49,14 +60,6 @@ def kubernetesGetPodStatus(podId):
         elif i != "running":
             return False
 
-def kubernetesGenerateIngressYaml(clusterName,serviceName):
-    print("Generating Ingress Yaml",clusterName,serviceName)
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/01_permissions.py {clusterName} {serviceName}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/02_cluster-role.py {clusterName} {serviceName}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/03_config.py {clusterName} {serviceName}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/04_deployment.py {clusterName} {serviceName}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/05_service.py {clusterName} {serviceName}"],shell=True).wait()
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/06_ingress.py {clusterName} {serviceName}"],shell=True).wait()
 
 def kubernetesGeneratePodsYaml(clusterName,serviceName,userName):
     print("Generating Pod Yaml",clusterName,serviceName,userName)

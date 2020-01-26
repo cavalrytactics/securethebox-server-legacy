@@ -23,7 +23,8 @@ matrix:
       services: 
         - docker
       before_install:
-        - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf "$HOME/google-cloud-sdk"; nohup curl https://sdk.cloud.google.com | bash > /dev/null & ; fi
+        - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf "$HOME/google-cloud-sdk"; curl -o install_gcloud.sh https://sdk.cloud.google.com ; fi
+        - nohup bash install_gcloud.sh &
         - for i in $(seq 1 10); do sleep 60; echo $i; done
         - source $HOME/google-cloud-sdk/path.bash.inc
         - gcloud components install kubectl --verbosity="debug"
