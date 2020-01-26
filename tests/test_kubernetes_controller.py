@@ -30,6 +30,15 @@ def test_setServiceName():
 def test_setUserName():
     assert kc.setUserName(testData["userName"]) == True
 
+def test_setEmailAddress():
+    assert kc.setEmailAddress(testData["emailAddress"]) == True
+
+def test_setGoogleClientId():
+    assert kc.setGoogleClientId(testData["googleClientId"]) == True
+
+def test_setGoogleClientSecret():
+    assert kc.setGoogleClientSecret(testData["googleClientSecret"]) == True
+
 def test_setPodId():
     assert kc.setPodId("podid") == True
 
@@ -63,3 +72,18 @@ def test_deleteIngressYamlFiles():
     kc.setServiceName(testData["serviceName_ingress"])
     kc.setUserName(testData["userName"])
     assert kc.deleteIngressYamlFiles() == True
+
+def test_deleteServiceYamlFiles():
+    kc.setCurrentDirectory()
+    kc.setClusterName(testData["clusterName"])
+    kc.setServiceName(testData["serviceName_service"])
+    kc.setUserName(testData["userName"])
+    assert kc.deleteServiceYamlFiles() == True
+
+def test_deleteAuthenticationYamlFiles():
+    kc.setCurrentDirectory()
+    kc.setClusterName(testData["clusterName"])
+    kc.setServiceName(testData["serviceName_authentication"])
+    kc.setUserName(testData["userName"])
+    assert kc.deleteAuthenticationYamlFiles() == True
+

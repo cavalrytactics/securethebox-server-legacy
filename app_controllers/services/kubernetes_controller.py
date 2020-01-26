@@ -150,6 +150,24 @@ class KubernetesController():
         except:
             return False
 
+    def deleteAuthenticationYamlFiles(self):
+        try:
+            fileList = ["01_deployment", "02_service", "03_ingress"]
+            currentDirectory = self.currentDirectory
+            for file in fileList:
+                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
+                try:
+                    subprocess.Popen([f"rm -rf {fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml"],shell=True).wait()
+                except:
+                    continue
+                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                print(fileCreated)
+                if fileCreated == True:
+                    return False 
+            return True
+        except:
+            return False
+
 def kubernetesGetPodId(serviceName, userName):
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
     # Command Output
@@ -187,13 +205,6 @@ def kubernetesGetPodStatus(podId):
 def kubernetesGeneratePodsYaml(clusterName,serviceName,userName):
     print("Generating Pod Yaml",clusterName,serviceName,userName)
     subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"],shell=True).wait()
-
-def kubernetesDeleteServicesYaml(clusterName,serviceName, userName):
-    print("Deleting Service Yaml")
-    # print(f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml")
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/02_{clusterName}-{serviceName}-{userName}-service.yml"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/03_{clusterName}-{serviceName}-{userName}-ingress.yml"],shell=True).wait()
 
 def kubernetesDeleteAuthenticationYaml(clusterName,serviceName, userName):
     print("Deleting Service Yaml")
