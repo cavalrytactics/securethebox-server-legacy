@@ -36,7 +36,7 @@ class KubernetesController():
             encryptedFileName = f"{unencryptedFileName}.enc"
             fileCreated = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
             if fileCreated == True:
-                subprocess.Popen([f"echo 'yes' | travis encrypt-file {fullUncryptedFilePath}{unencryptedFileName} --add"],shell=True).wait()
+                subprocess.Popen([f"echo 'yes' | travis encrypt-file {fullUncryptedFilePath}{unencryptedFileName} --add >/dev/null 2>&1"],shell=True).wait()
                 os.rename(f"{self.currentDirectory}/{encryptedFileName}",f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
                 return True
             else:
@@ -49,7 +49,6 @@ class KubernetesController():
     def loadRemoteConfig(self):
         try:
             config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
-            print("Active host is %s" % configuration.Configuration().host)
             return True
         except:
             return False
@@ -172,7 +171,6 @@ class KubernetesController():
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/authentication/{self.serviceName}/{file}"
                 subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName} {self.emailAddress} {self.googleClientId} {self.googleClientSecret}"],shell=True).wait()
-                print(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
                 fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
                 if fileCreated == False:
                     return False
@@ -192,7 +190,6 @@ class KubernetesController():
                     continue
                 fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
                 if fileCreated == True:
-                    print(fileCreated, f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
                     return False 
             return True
         except:
@@ -209,7 +206,6 @@ class KubernetesController():
                 except:
                     continue
                 fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
-                print(fileCreated)
                 if fileCreated == True:
                     return False 
             return True
@@ -227,7 +223,6 @@ class KubernetesController():
                 except:
                     continue
                 fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
-                print(fileCreated)
                 if fileCreated == True:
                     return False 
             return True

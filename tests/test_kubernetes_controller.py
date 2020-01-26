@@ -80,9 +80,9 @@ def test_generateAuthenticationYamlFiles():
     kc.setGoogleClientSecret()
     assert kc.generateAuthenticationYamlFiles() == True
 
-# def test_loadRemoteConfig():
-#     kc.setCurrentDirectory()
-#     assert kc.loadRemoteConfig() == True
+def test_loadRemoteConfig():
+    kc.setCurrentDirectory()
+    assert kc.loadRemoteConfig() == True
 
 # def test_manageAuthenticationPod():
 #     kc.setCurrentDirectory()

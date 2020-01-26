@@ -6,6 +6,7 @@ import subprocess
 import sys
 import os
 import docker
+from subprocess import check_output
 
 class GitControl():
     def __init__(self):
@@ -16,6 +17,7 @@ class GitControl():
         self.git_current_branch = ""
         self.git_upstream = ""
         self.arguments = []
+        self.pytest_result = False
 
     def setArguments(self, args):
         self.arguments = args
@@ -34,6 +36,13 @@ class GitControl():
         branchName = subprocess.Popen("git branch | grep \\* | cut -d ' ' -f2", stdout=subprocess.PIPE, shell=True)
         parsedBranch = os.environ["CURRENTBRANCH"] = str(branchName.communicate()[0].decode('utf-8')).split('\n', 1)[0]
         self.git_current_branch = parsedBranch
+    
+    def pytestCheck(self):
+        failures = subprocess.Popen([f"pytest -vs -x tests/"],shell=True).wait()
+        if failures >= 1:
+            self.pytest_result = False
+        else:
+            self.pytest_result = True
     
     def interpretArgs(self):
         self.setGithubProjectName()
@@ -54,14 +63,22 @@ class GitControl():
         
         # Pushing Master
         elif self.arguments[0] == "git-push-master":
-            subprocess.Popen([f"git checkout master && git cz ; git push"],shell=True).wait()
+            self.pytestCheck()
+            if self.pytest_result == True:
+                subprocess.Popen([f"git checkout master && git cz ; git push"],shell=True).wait()
+            else:
+                print("PYTEST FAILED!")
         
         # Pushing Branch
         elif self.arguments[0] == "git-push-branch":
-            if self.git_current_branch != "master":
-                subprocess.Popen([f"git cz && git push --set-upstream origin "+self.git_current_branch+" && cross-var \"open https://github.com/"+self.git_user+"/"+self.git_fork_name+"/compare/master..."+self.git_user+":"+self.git_current_branch+"?expand=1\""],shell=True).wait()
+            self.pytestCheck()
+            if self.pytest_result == True:
+                if self.git_current_branch != "master":
+                    subprocess.Popen([f"git cz && git push --set-upstream origin "+self.git_current_branch+" && cross-var \"open https://github.com/"+self.git_user+"/"+self.git_fork_name+"/compare/master..."+self.git_user+":"+self.git_current_branch+"?expand=1\""],shell=True).wait()
+                else:
+                    print("YOU ARE NOT CHECKOUT TO A BRANCH! git checkout -b \"TICKET-ID\"")
             else:
-                print("YOU ARE NOT CHECKOUT TO A BRANCH! git checkout -b \"TICKET-ID\"")
+                print("PYTEST FAILED!")
         
         # Sync Fork Master
         elif self.arguments[0] == "git-sync-local":
@@ -94,6 +111,13 @@ class GitControl():
                     client.images.remove(image.id,force=True)
                 except:
                     print("Could not delete", image)
+
+        elif self.arguments[0] == "pytest-all":
+            failures = subprocess.Popen([f"pytest -vs -x tests/"],shell=True).wait()
+            if failures >= 1:
+                return False
+            else:
+                return True
             
 if __name__ == "__main__":
     gc = GitControl()
