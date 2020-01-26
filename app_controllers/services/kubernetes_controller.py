@@ -6,7 +6,7 @@ from subprocess import check_output
 import time
 from os import path
 import yaml
-from kubernetes import client, config
+from kubernetes import client, config, utils
 
 class KubernetesController():
     def __init__(self):
@@ -194,6 +194,42 @@ class KubernetesController():
         except:
             return False
 
+#  depends on file
+    def manageIngressPod(self):
+        config.load_kube_config()
+        try:
+            fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
+            currentDirectory = self.currentDirectory
+            for file in fileList:
+                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
+                try:
+                    k8s_client = client.ApiClient()
+                    print(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                    utils.create_from_yaml(k8s_client, f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                    print("Created utils")
+                    k8s_api = client.ExtensionsV1beta1Api(k8s_client)
+                    deps = k8s_api.read_namespaced_deployment(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml", "default")
+                    print("Deployment {0} created".format(deps.metadata.name))
+
+
+                    # with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml") as f:
+                    #     dep = yaml.safe_load(f)
+                    #     print("Loaded yaml",dep)
+                    #     k8s_client = client.ApiClient()
+                    #     if self.kubectlAction == "apply":
+                    #         print("Selected Apply")
+                    #         resp = k8s_client.ExtensionsV1beta1Api(body=dep, namespace="default")
+                    #         print("Deployment created. status='%s'" % resp.metadata.name)
+                    #     elif self.kubectlAction == "delete":
+                    #         resp = k8s_client.delete_namespaced_deployment(body=dep, namespace="default")
+                    #         print("Deployment deleted. status='%s'" % resp.metadata.name)
+                except:
+                    print("Error", f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                    return False
+            return True
+        except:
+            return False
+
     def manageAuthenticationPod(self):
         config.load_kube_config()
         try:
@@ -202,17 +238,25 @@ class KubernetesController():
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/authentication/{self.serviceName}/{file}"
                 try:
-                    with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml") as f:
-                        dep = yaml.safe_load(f)
-                        print("Loaded yaml",dep)
-                        k8s_apps_v1 = client.AppsV1Api()
-                        if self.kubectlAction == "apply":
-                            print("Selected Apply")
-                            resp = k8s_apps_v1.create_namespaced_deployment(body=dep, namespace="default")
-                            print("Deployment created. status='%s'" % resp.metadata.name)
-                        elif self.kubectlAction == "delete":
-                            resp = k8s_apps_v1.delete_namespaced_deployment(body=dep, namespace="default")
-                            print("Deployment deleted. status='%s'" % resp.metadata.name)
+                    k8s_client = client.ApiClient()
+                    print(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                    utils.create_from_yaml(k8s_client, f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                    k8s_api = client.ExtensionsV1beta1Api(k8s_client)
+                    deps = k8s_api.read_namespaced_deployment(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml", "default")
+                    print("Deployment {0} created".format(deps.metadata.name))
+
+
+                    # with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml") as f:
+                    #     dep = yaml.safe_load(f)
+                    #     print("Loaded yaml",dep)
+                    #     k8s_client = client.ApiClient()
+                    #     if self.kubectlAction == "apply":
+                    #         print("Selected Apply")
+                    #         resp = k8s_client.ExtensionsV1beta1Api(body=dep, namespace="default")
+                    #         print("Deployment created. status='%s'" % resp.metadata.name)
+                    #     elif self.kubectlAction == "delete":
+                    #         resp = k8s_client.delete_namespaced_deployment(body=dep, namespace="default")
+                    #         print("Deployment deleted. status='%s'" % resp.metadata.name)
                 except:
                     print("Error", f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
                     return False

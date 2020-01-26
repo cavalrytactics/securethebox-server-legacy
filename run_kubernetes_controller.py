@@ -84,6 +84,13 @@ def test_manageAuthenticationPod():
     kc.setKubectlAction(testData["kubectlAction_apply"])
     assert kc.manageAuthenticationPod() == True
 
+def test_manageIngressPod():
+    kc.setCurrentDirectory()
+    kc.setClusterName(testData["clusterName"])
+    kc.setServiceName(testData["serviceName_ingress"])
+    kc.setKubectlAction(testData["kubectlAction_apply"])
+    assert kc.manageIngressPod() == True
+
 def test_deleteIngressYamlFiles():
     kc.setCurrentDirectory()
     kc.setClusterName(testData["clusterName"])
@@ -106,6 +113,8 @@ def test_deleteAuthenticationYamlFiles():
     kc.setUserName(testData["userName"])
     assert kc.deleteAuthenticationYamlFiles() == True
 
+
+
 if __name__ == "__main__":
-    test_generateAuthenticationYamlFiles()
-    test_manageAuthenticationPod()
+    test_generateIngressYamlFiles()
+    test_manageIngressPod()
