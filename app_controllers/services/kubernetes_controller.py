@@ -19,7 +19,6 @@ class KubernetesController():
         self.googleClientId = ""
         self.googleClientSecret = ""
         self.kubectlAction = ""
-        self.kubernetesConfig = ""
 
     def loadRemoteConfig(self):
         try:
@@ -69,16 +68,32 @@ class KubernetesController():
         except:
             return False
 
-    def setGoogleClientId(self, googleClientId):
+    def setGoogleClientId(self):
         try:
-            self.googleClientId = googleClientId
+            filePath = "./app_controllers/secrets/googleClientId.txt"
+            fileExists = path.exists(filePath)
+            if fileExists == False:
+                with open(filePath, 'w') as file:
+                    environmentVariable = os.environ(['GOOGLE_CLIENT_ID'])
+                    file.write(environmentVariable)
+            else:
+                readGoogleClientIdFile = open(filePath,'r')
+                self.googleClientId = readGoogleClientIdFile.read().rstrip('\n')
             return True
         except:
             return False
 
-    def setGoogleClientSecret(self, googleClientSecret):
+    def setGoogleClientSecret(self):
         try:
-            self.googleClientSecret = googleClientSecret
+            filePath = "./app_controllers/secrets/googleClientSecret.txt"
+            fileExists = path.exists(filePath)
+            if fileExists == False:
+                with open(filePath, 'w') as file:
+                    environmentVariable = os.environ(['GOOGLE_CLIENT_SECRET'])
+                    file.write(environmentVariable)
+            else:
+                readGoogleClientIdFile = open(filePath,'r')
+                self.googleClientId = readGoogleClientIdFile.read().rstrip('\n')
             return True
         except:
             return False

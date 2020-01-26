@@ -1,19 +1,13 @@
 from app_controllers.services.kubernetes_controller import KubernetesController
+import os
 
 kc = KubernetesController()
-
-readgoogleClientId = open('./app_controllers/secrets/googleClientId.txt','r')
-readgoogleClientSecret = open('./app_controllers/secrets/googleClientSecret.txt','r')
-googleClientSecret = readgoogleClientSecret.read().rstrip('\n')
-googleClientId = readgoogleClientId.read().rstrip('\n')
 
 testData = {
     "clusterName": "us-west1-a",
     "serviceName_ingress": "traefik",
     "serviceName_service": "jenkins",
     "serviceName_authentication": "auth",
-    "googleClientId": googleClientId,
-    "googleClientSecret": googleClientSecret,
     "userName": "charles",
     "emailAddress": "jidokaus@gmail.com",
     "kubectlAction_apply": "apply",
@@ -37,10 +31,10 @@ def test_setEmailAddress():
     assert kc.setEmailAddress(testData["emailAddress"]) == True
 
 def test_setGoogleClientId():
-    assert kc.setGoogleClientId(testData["googleClientId"]) == True
+    assert kc.setGoogleClientId() == True
 
 def test_setGoogleClientSecret():
-    assert kc.setGoogleClientSecret(testData["googleClientSecret"]) == True
+    assert kc.setGoogleClientSecret() == True
 
 def test_setPodId():
     assert kc.setPodId(testData["dockerePodId"]) == True
@@ -69,8 +63,8 @@ def test_generateAuthenticationYamlFiles():
     kc.setServiceName(testData["serviceName_authentication"])
     kc.setUserName(testData["userName"])
     kc.setEmailAddress(testData["emailAddress"])
-    kc.setGoogleClientId(testData["googleClientId"])
-    kc.setGoogleClientSecret(testData["googleClientSecret"])
+    kc.setGoogleClientId()
+    kc.setGoogleClientSecret()
     assert kc.generateAuthenticationYamlFiles() == True
 
 # def test_loadRemoteConfig():
