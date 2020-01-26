@@ -41,7 +41,7 @@ class KubernetesController():
                 return True
             else:
                 print("File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
-                return False
+            return True
         except:
             print("You may need to login to Travis")
             return False
