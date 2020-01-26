@@ -89,3 +89,7 @@ def test_deleteAuthenticationYamlFiles():
 
 def test_loadRemoteConfig():
     assert kc.loadRemoteConfig() == True
+
+
+if __name__ == "__main__":
+    test_loadRemoteConfig()
