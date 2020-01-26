@@ -101,7 +101,6 @@ class KubernetesController():
                 readGoogleClientIdFile = open(filePath,'r')
                 self.googleClientId = readGoogleClientIdFile.read().rstrip('\n')
                 return True
-            return False
         except:
             return False
 
@@ -118,7 +117,6 @@ class KubernetesController():
                 readGoogleClientSecretFile = open(filePath,'r')
                 self.googleClientSecret = readGoogleClientSecretFile.read().rstrip('\n')
                 return True
-            return False
         except:
             return False
 
