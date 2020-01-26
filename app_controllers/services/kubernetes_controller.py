@@ -90,6 +90,13 @@ class KubernetesController():
         except:
             return False
     
+    def setKubectlAction(self, kubectlAction):
+        try:
+            self.kubectlAction = kubectlAction
+            return True
+        except:
+            return False
+
     def generateIngressYamlFiles(self):
         try:
             fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
@@ -188,15 +195,26 @@ class KubernetesController():
             return False
 
     def manageAuthenticationPod(self):
+        config.load_kube_config()
         try:
             fileList = ["01_deployment", "02_service", "03_ingress"]
             currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/authentication/{self.serviceName}/{file}"
-                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName} {self.emailAddress} {self.googleClientId} {self.googleClientSecret}"],shell=True).wait()
-                print(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
-                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
-                if fileCreated == False:
+                try:
+                    with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml") as f:
+                        dep = yaml.safe_load(f)
+                        print("Loaded yaml",dep)
+                        k8s_apps_v1 = client.AppsV1Api()
+                        if self.kubectlAction == "apply":
+                            print("Selected Apply")
+                            resp = k8s_apps_v1.create_namespaced_deployment(body=dep, namespace="default")
+                            print("Deployment created. status='%s'" % resp.metadata.name)
+                        elif self.kubectlAction == "delete":
+                            resp = k8s_apps_v1.delete_namespaced_deployment(body=dep, namespace="default")
+                            print("Deployment deleted. status='%s'" % resp.metadata.name)
+                except:
+                    print("Error", f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
                     return False
             return True
         except:
@@ -235,7 +253,6 @@ def kubernetesGetPodStatus(podId):
         elif i != "running":
             return False
 
-
 def kubernetesGeneratePodsYaml(clusterName,serviceName,userName):
     print("Generating Pod Yaml",clusterName,serviceName,userName)
     subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"],shell=True).wait()
@@ -269,13 +286,3 @@ def kubernetesManageServicesPod(clusterName, serviceName, userName, action):
     subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/02_{clusterName}-{serviceName}-{userName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/services/{serviceName}/03_{clusterName}-{serviceName}-{userName}-ingress.yml"],shell=True).wait()
-
-def kubernetesManageAuthenticationPod(clusterName, serviceName, userName, action):
-    print(action,"Authentication Pod:",serviceName)
-    subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/authentication/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
-    subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/authentication/{serviceName}/02_{clusterName}-{serviceName}-{userName}-service.yml"],shell=True).wait()
-    subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/authentication/{serviceName}/03_{clusterName}-{serviceName}-{userName}-ingress.yml"],shell=True).wait()
-
-
-if __name__ == "__main__":
-    kubernetesGetPodId('jenkins','charles')

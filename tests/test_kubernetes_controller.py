@@ -16,6 +16,9 @@ testData = {
     "googleClientSecret": googleClientSecret,
     "userName": "charles",
     "emailAddress": "jidokaus@gmail.com",
+    "kubectlAction_apply": "apply",
+    "kubectlAction_delete": "delete",
+    "dockerePodId": "pod_id_123",
 }
 
 def test_setCurrentDirectory():
@@ -40,7 +43,11 @@ def test_setGoogleClientSecret():
     assert kc.setGoogleClientSecret(testData["googleClientSecret"]) == True
 
 def test_setPodId():
-    assert kc.setPodId("podid") == True
+    assert kc.setPodId(testData["dockerePodId"]) == True
+
+def test_setKubectlAction():
+    assert kc.setKubectlAction(testData["kubectlAction_apply"]) == True
+    assert kc.setKubectlAction(testData["kubectlAction_delete"]) == True
 
 def test_generateIngressYamlFiles():
     kc.setCurrentDirectory()
@@ -66,11 +73,23 @@ def test_generateAuthenticationYamlFiles():
     kc.setGoogleClientSecret(testData["googleClientSecret"])
     assert kc.generateAuthenticationYamlFiles() == True
 
+def test_loadRemoteConfig():
+    assert kc.loadRemoteConfig() == True
+
+def test_manageAuthenticationPod():
+    kc.setCurrentDirectory()
+    kc.setClusterName(testData["clusterName"])
+    kc.setServiceName(testData["serviceName_authentication"])
+    kc.setUserName(testData["userName"])
+    kc.setKubectlAction(testData["kubectlAction_apply"])
+    assert kc.manageAuthenticationPod() == True
+
 def test_deleteIngressYamlFiles():
     kc.setCurrentDirectory()
     kc.setClusterName(testData["clusterName"])
     kc.setServiceName(testData["serviceName_ingress"])
     kc.setUserName(testData["userName"])
+    kc.loadRemoteConfig()
     assert kc.deleteIngressYamlFiles() == True
 
 def test_deleteServiceYamlFiles():
@@ -87,5 +106,3 @@ def test_deleteAuthenticationYamlFiles():
     kc.setUserName(testData["userName"])
     assert kc.deleteAuthenticationYamlFiles() == True
 
-def test_loadRemoteConfig():
-    assert kc.loadRemoteConfig() == True
