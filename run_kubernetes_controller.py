@@ -130,13 +130,19 @@ def test_deleteAuthenticationYamlFiles():
     kc.setUserName(testData["userName"])
     assert kc.deleteAuthenticationYamlFiles() == True
 
+def test_setTravisEncryptFile():
+    kc.setCurrentDirectory() == True
+    for file in testData["unencryptedFileNames"]:
+        kc.setFileName(file)
+        print("Encrypting",file)
+        kc.setTravisEncryptFile()
+        print("Dencrypting",file)
+        kc.setTravisUnencryptFile()
 
 
 
 if __name__ == "__main__":
-    fullUncryptedFilePath = f"./app_controllers/secrets/"
-    unencryptedFileName = "kubernetesConfig.yml"
-    encryptedFileName = f"{unencryptedFileName}.enc"
+    test_setTravisEncryptFile()
     # fileCreated = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
     # inputF = "y".encode("utf-8")
     # output = subprocess.Popen([f"echo 'yes' | travis encrypt-file {fullUncryptedFilePath}{unencryptedFileName}"],shell=True).wait()
@@ -148,39 +154,46 @@ if __name__ == "__main__":
     # out = subprocess.run("echo 'yes' |travis encrypt-file ./app_controllers/secrets/kubernetesConfig.yml", shell=True, text=True, capture_output=True)
     # print("OUTPUT:",out.stdout, out.stderr)
 
-    process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f ./app_controllers/secrets/kubernetesConfig.yml"],stdout=subprocess.PIPE, shell=True)
-    finished = True
-    while finished:
-        output = process.stdout.readline()
-        if output == '' and process.poll() is not None:
-            finished = True
-        if "openssl" in output.strip().decode("utf-8"):
-            decryptCommand = str(output.strip().decode("utf-8")).replace("kubernetesConfig.yml.enc","./app_controllers/secrets/kubernetesConfig.yml.enc")
+    # process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f ./app_controllers/secrets/kubernetesConfig.yml"],stdout=subprocess.PIPE, shell=True)
+    # finished = True
+    # while finished:
+    #     output = process.stdout.readline()
+    #     if output == '' and process.poll() is not None:
+    #         finished = True
+    #     if output:
+    #         print(output.strip().decode("utf-8"))
+    #     rc = process.poll()
+    #     print("log",rc)
+    #     finished = False
+        # print(output.strip().decode("utf-8"))
+        # finished = False
+        # if "openssl" in output.strip().decode("utf-8"):
+        #     decryptCommand = str(output.strip().decode("utf-8")).replace("kubernetesConfig.yml.enc","./app_controllers/secrets/kubernetesConfig.yml.enc")
 
-            with open("./.travis.yml","r") as f:
-                dep = yaml.safe_load(f)
-                for index,existingCommand in enumerate(dep["matrix"]["include"][0]["before_install"]):
-                    if "openssl" in dep["matrix"]["include"][0]["before_install"][index]:
-                        print("POPPING",index)
-                        dep["matrix"]["include"][0]["before_install"].pop(index)
-                # if decryptCommand not in dep["matrix"]["include"][0]["before_install"]:
-                #     dep["matrix"]["include"][0]["before_install"].append(decryptCommand)
-                        with open("./.travis.yml","w") as f:
-                            yaml.dump(dep, f)
+        #     with open("./.travis.yml","r") as f:
+        #         dep = yaml.safe_load(f)
+        #         for index,existingCommand in enumerate(dep["matrix"]["include"][0]["before_install"]):
+        #             if "openssl" in dep["matrix"]["include"][0]["before_install"][index]:
+        #                 print("POPPING",index)
+        #                 dep["matrix"]["include"][0]["before_install"].pop(index)
+        #         # if decryptCommand not in dep["matrix"]["include"][0]["before_install"]:
+        #         #     dep["matrix"]["include"][0]["before_install"].append(decryptCommand)
+        #                 with open("./.travis.yml","w") as f:
+        #                     yaml.dump(dep, f)
             
-            keyEnvironmentVariable = ""
-            ivEnvironmentVariable = ""
-            keyEnvironmentVariableMatch = re.finditer("((\$encrypted.)(.*\_key))", str(decryptCommand), re.MULTILINE)
-            ivEnvironmentVariableMatch1 = re.finditer("(\-iv.)(\$encrypted.)(.*\_iv)", str(decryptCommand), re.MULTILINE)
-            for matchNum, match in enumerate(keyEnvironmentVariableMatch, start=1):
-                keyEnvironmentVariable = str(match.group())
-            for matchNum, match in enumerate(ivEnvironmentVariableMatch1, start=1):
-                ivEnvironmentVariable = str(match.group())
-            ivEnvironmentVariableMatch2 = re.finditer("(\$encrypted.)(.*\_iv)", str(ivEnvironmentVariable), re.MULTILINE)
-            for matchNum, match in enumerate(ivEnvironmentVariableMatch2, start=1):
-                ivEnvironmentVariable = str(match.group())
-            print(keyEnvironmentVariable,ivEnvironmentVariable)
-            finished = False
+        #     keyEnvironmentVariable = ""
+        #     ivEnvironmentVariable = ""
+        #     keyEnvironmentVariableMatch = re.finditer("((\$encrypted.)(.*\_key))", str(decryptCommand), re.MULTILINE)
+        #     ivEnvironmentVariableMatch1 = re.finditer("(\-iv.)(\$encrypted.)(.*\_iv)", str(decryptCommand), re.MULTILINE)
+        #     for matchNum, match in enumerate(keyEnvironmentVariableMatch, start=1):
+        #         keyEnvironmentVariable = str(match.group())
+        #     for matchNum, match in enumerate(ivEnvironmentVariableMatch1, start=1):
+        #         ivEnvironmentVariable = str(match.group())
+        #     ivEnvironmentVariableMatch2 = re.finditer("(\$encrypted.)(.*\_iv)", str(ivEnvironmentVariable), re.MULTILINE)
+        #     for matchNum, match in enumerate(ivEnvironmentVariableMatch2, start=1):
+        #         ivEnvironmentVariable = str(match.group())
+        #     print(keyEnvironmentVariable,ivEnvironmentVariable)
+            # finished = False
 
 
 
@@ -189,3 +202,23 @@ if __name__ == "__main__":
 
     # print(output)
     
+
+    # process = subprocess.Popen(["echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/kubernetesConfig.yml"],stdout=subprocess.PIPE, shell=True)
+    # finished = True
+    # while finished:
+    #     output = process.stdout.readline()
+    #     if output == '' and process.poll() is not None:
+    #         finished = False
+    #     if output:
+    #         print(output.strip().decode("utf-8"))
+        
+    #     # finished = False
+    #     # outputi = process.stdin
+    #     # print(outputi)
+    #     # if outputi == '' and process.poll() is not None:
+    #     #     break
+    #     # if outputi:
+    #     #     print(outputi.strip())
+    # rc = process.poll()
+    # print("log",rc)
+    # finished = False

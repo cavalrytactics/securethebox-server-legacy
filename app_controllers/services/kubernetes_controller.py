@@ -9,6 +9,7 @@ from os import environ
 import yaml
 from kubernetes import client, config, utils
 from kubernetes.client import configuration
+import re
 
 class KubernetesController():
     def __init__(self):
@@ -18,10 +19,9 @@ class KubernetesController():
         self.serviceName = ""
         self.userName = ""
         self.emailAddress = ""
-        self.googleClientId = ""
-        self.googleClientSecret = ""
         self.kubectlAction = ""
         self.fileName = ""
+        self.encryptedEnvironmentVariables = {}
 
     def setFileName(self, fileName):
         try:
@@ -37,13 +37,24 @@ class KubernetesController():
             encryptedFileName = f"{unencryptedFileName}.enc"
             fileExists = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
             if fileExists == True:
-                process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f ./app_controllers/secrets/kubernetesConfig.yml"],stdout=subprocess.PIPE, shell=True)
+                process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/kubernetesConfig.yml"],stdout=subprocess.PIPE, shell=True)
                 finished = True
+                keyVariableKEY = ""
+                keyVariableVALUE = ""
+                ivVariableKEY = ""
+                ivVariableVALUE = ""
+                decryptCommand = ""
+                keyEnvironmentVariable = ""
+                ivEnvironmentVariable = ""
                 while finished:
+                    print("while looop")
                     output = process.stdout.readline()
+                    print(output.strip().decode("utf-8"))
                     if output == '' and process.poll() is not None:
                         finished = True
+                    
                     if "openssl" in output.strip().decode("utf-8"):
+                        print(output.strip().decode("utf-8"))
                         decryptCommand = str(output.strip().decode("utf-8")).replace("kubernetesConfig.yml.enc","./app_controllers/secrets/kubernetesConfig.yml.enc")
                         dep = ""
                         with open("./.travis.yml","r") as f:
@@ -52,9 +63,35 @@ class KubernetesController():
                                 dep["matrix"]["include"][0]["before_install"].append(decryptCommand)
                         with open("./.travis.yml","w") as f:
                             yaml.dump(dep, f)
-                        
                         os.rename(f"{self.currentDirectory}/{encryptedFileName}",f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
-                        finished = False
+
+                        keyEnvironmentVariableMatch = re.finditer("(([$]encrypted.)(.*[_]key))", str(decryptCommand), re.MULTILINE)
+                        ivEnvironmentVariableMatch1 = re.finditer("([-]iv.)([$]encrypted.)(.*[_]iv)", str(decryptCommand), re.MULTILINE)
+                        for matchNum, match in enumerate(keyEnvironmentVariableMatch, start=1):
+                            keyEnvironmentVariable = str(match.group())
+                        for matchNum, match in enumerate(ivEnvironmentVariableMatch1, start=1):
+                            ivEnvironmentVariable = str(match.group())
+                        ivEnvironmentVariableMatch2 = re.finditer("([$]encrypted.)(.*[_]iv)", str(ivEnvironmentVariable), re.MULTILINE)
+                        for matchNum, match in enumerate(ivEnvironmentVariableMatch2, start=1):
+                            ivEnvironmentVariable = str(match.group())
+                        setattr(self, keyEnvironmentVariable, "")
+                        keyVariableKEY = keyEnvironmentVariable
+                        setattr(self, ivEnvironmentVariable, "")
+                        ivVariableKEY = ivEnvironmentVariable
+                    
+                    if "key:" in output.strip().decode("utf-8"):
+                        print(output.strip().decode("utf-8"))
+                        setattr(self, keyVariableKEY, output.strip().decode("utf-8"))
+                        print(keyVariableKEY,output.strip().decode("utf-8"))
+                        self.encryptedEnvironmentVariables[keyVariableKEY] = output.strip().decode("utf-8").replace("key:","").strip()
+                        
+                    if "iv:" in output.strip().decode("utf-8"):
+                        print(output.strip().decode("utf-8"))
+                        setattr(self, ivVariableKEY, output.strip().decode("utf-8"))
+                        print(ivVariableKEY,output.strip().decode("utf-8"))
+                        self.encryptedEnvironmentVariables[ivVariableKEY] = output.strip().decode("utf-8").replace("iv:","").strip()
+                        
+                        print("SELF:",self.encryptedEnvironmentVariables)
                         return True
             else:
                 print("Unencrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
@@ -65,12 +102,23 @@ class KubernetesController():
 
     def setTravisUnencryptFile(self):
         try:
-            fullUncryptedFilePath = f"{self.currentDirectory}/app_controllers/secrets/"
-            unencryptedFileName = self.fileName
-            encryptedFileName = f"{unencryptedFileName}.enc"
-            fileCreated = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
+            fullencryptedFilePath = f"{self.currentDirectory}/app_controllers/secrets/"
+            encryptedFileName = f"{self.fileName}.enc"
+            unencryptedFileName = f"{self.fileName}"
+            fileCreated = path.exists(f"{fullencryptedFilePath}{encryptedFileName}")
             if fileCreated == True:
-                subprocess.Popen([f"openssl aes-256-cbc -K $encrypted_8902be8eea6d_key -iv $encrypted_8902be8eea6d_iv -in {fullUncryptedFilePath}{encryptedFileName} -out {fullUncryptedFilePath}{unencryptedFileName} -d"],shell=True).wait()
+                keyVariableKEY = ""
+                keyVariableVALUE = ""
+                ivVariableKEY = ""
+                ivVariableVALUE = ""
+                for variable in self.encryptedEnvironmentVariables.keys():
+                    if "key" in variable:
+                        keyVariableKEY = variable
+                        keyVariableVALUE = self.encryptedEnvironmentVariables[variable]
+                    elif "iv" in variable:
+                        ivVariableKEY = variable
+                        ivVariableVALUE = self.encryptedEnvironmentVariables[variable]
+                subprocess.Popen([f"openssl aes-256-cbc -K {keyVariableVALUE} -iv {ivVariableVALUE} -in {fullencryptedFilePath}{encryptedFileName} -out {fullencryptedFilePath}{unencryptedFileName} -d"],shell=True).wait()
                 return True
             else:
                 print("Encrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")

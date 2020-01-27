@@ -28,7 +28,8 @@ def test_setTravisEncryptFile():
     kc.setCurrentDirectory() == True
     for file in testData["unencryptedFileNames"]:
         kc.setFileName(file)
-        assert kc.setTravisEncryptFile() == True
+        kc.setTravisEncryptFile()
+        kc.setTravisUnencryptFile()
 
 def test_setClusterName():
     assert kc.setClusterName(testData["clusterName"]) == True
