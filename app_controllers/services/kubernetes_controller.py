@@ -35,13 +35,27 @@ class KubernetesController():
             fullUncryptedFilePath = f"{self.currentDirectory}/app_controllers/secrets/"
             unencryptedFileName = self.fileName
             encryptedFileName = f"{unencryptedFileName}.enc"
-            fileCreated = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
-            if fileCreated == True:
-                subprocess.Popen([f"echo 'yes' | travis encrypt-file {fullUncryptedFilePath}{unencryptedFileName} --add >/dev/null 2>&1"],shell=True).wait()
-                os.rename(f"{self.currentDirectory}/{encryptedFileName}",f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
-                return True
+            fileExists = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
+            if fileExists == True:
+                process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f ./app_controllers/secrets/kubernetesConfig.yml"],stdout=subprocess.PIPE, shell=True)
+                finished = True
+                while finished:
+                    output = process.stdout.readline()
+                    if output == '' and process.poll() is not None:
+                        finished = True
+                    if "openssl" in output.strip().decode("utf-8"):
+                        decryptCommand = str(output.strip().decode("utf-8")).replace("kubernetesConfig.yml.enc","./app_controllers/secrets/kubernetesConfig.yml.enc")
+                        dep = ""
+                        with open("./.travis.yml","r") as f:
+                            dep = yaml.safe_load(f)
+                            if decryptCommand not in dep["matrix"]["include"][0]["before_install"]:
+                                dep["matrix"]["include"][0]["before_install"].append(decryptCommand)
+                        with open("./.travis.yml","w") as f:
+                            yaml.dump(dep, f)
+                        finished = False
+                        return True
             else:
-                print("File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
+                print("Unencrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
             return True
         except:
             print("You may need to login to Travis")
