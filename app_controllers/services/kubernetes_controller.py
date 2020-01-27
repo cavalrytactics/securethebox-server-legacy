@@ -52,7 +52,7 @@ class KubernetesController():
                         finished = True
                     
                     if "openssl" in output.strip().decode("utf-8"):
-                        decryptCommand = str(output.strip().decode("utf-8")).replace("kubernetesConfig.yml.enc","./app_controllers/secrets/kubernetesConfig.yml.enc")
+                        decryptCommand = str(output.strip().decode("utf-8"))
                         dep = ""
                         with open("./.travis.yml","r") as f:
                             dep = yaml.safe_load(f)
