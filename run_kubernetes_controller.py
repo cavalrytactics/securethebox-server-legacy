@@ -156,19 +156,17 @@ if __name__ == "__main__":
             finished = True
         if "openssl" in output.strip().decode("utf-8"):
             decryptCommand = str(output.strip().decode("utf-8")).replace("kubernetesConfig.yml.enc","./app_controllers/secrets/kubernetesConfig.yml.enc")
-            dep = ""
+
             with open("./.travis.yml","r") as f:
                 dep = yaml.safe_load(f)
-
-            for index, existingCommand in enumerate(dep["matrix"]["include"][0]["before_install"]):
-                if "openssl" in str(existingCommand):
-                    print("POPPING",index)
-                    del dep["matrix"]["include"][0]["before_install"][index]
+                for index,existingCommand in enumerate(dep["matrix"]["include"][0]["before_install"]):
+                    if "openssl" in dep["matrix"]["include"][0]["before_install"][index]:
+                        print("POPPING",index)
+                        dep["matrix"]["include"][0]["before_install"].pop(index)
                 # if decryptCommand not in dep["matrix"]["include"][0]["before_install"]:
                 #     dep["matrix"]["include"][0]["before_install"].append(decryptCommand)
-            # with open("./.travis.yml","w") as f:
-            #     yaml.dump(dep, f)
-                print(dep["matrix"]["include"][0]["before_install"])
+                        with open("./.travis.yml","w") as f:
+                            yaml.dump(dep, f)
             
             keyEnvironmentVariable = ""
             ivEnvironmentVariable = ""

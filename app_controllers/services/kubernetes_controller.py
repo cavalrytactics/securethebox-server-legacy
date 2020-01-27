@@ -52,10 +52,28 @@ class KubernetesController():
                                 dep["matrix"]["include"][0]["before_install"].append(decryptCommand)
                         with open("./.travis.yml","w") as f:
                             yaml.dump(dep, f)
+                        
+                        os.rename(f"{self.currentDirectory}/{encryptedFileName}",f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
                         finished = False
                         return True
             else:
                 print("Unencrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
+            return True
+        except:
+            print("You may need to login to Travis")
+            return False
+
+    def setTravisUnencryptFile(self):
+        try:
+            fullUncryptedFilePath = f"{self.currentDirectory}/app_controllers/secrets/"
+            unencryptedFileName = self.fileName
+            encryptedFileName = f"{unencryptedFileName}.enc"
+            fileCreated = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
+            if fileCreated == True:
+                subprocess.Popen([f"openssl aes-256-cbc -K $encrypted_8902be8eea6d_key -iv $encrypted_8902be8eea6d_iv -in {fullUncryptedFilePath}{encryptedFileName} -out {fullUncryptedFilePath}{unencryptedFileName} -d"],shell=True).wait()
+                return True
+            else:
+                print("Encrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
             return True
         except:
             print("You may need to login to Travis")

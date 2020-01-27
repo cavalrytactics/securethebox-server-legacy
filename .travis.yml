@@ -12,6 +12,12 @@ matrix:
     - sudo apt-get update -y
     - sudo apt-get install google-cloud-sdk -y
     - sudo apt-get install kubectl -y
+    - openssl aes-256-cbc -K $encrypted_8902be8eaaea6d_key -iv $encrypted_8902be8eea6d_iv
+      -in ./app_controllers/secrets/kubernetesConfig.yml.enc -out ./app_controllers/secrets/kubernetesConfig.yml
+      -d
+    - openssl aes-256-cbc -K $encrypted_8902be8eea6d_key -iv $encrypted_8902be8eea6d_iv
+      -in ./app_controllers/secrets/kubernetesConfig.yml.enc -out ./app_controllers/secrets/kubernetesConfig.yml
+      -d
     - openssl aes-256-cbc -K $encrypted_8902be8eea6d_key -iv $encrypted_8902be8eea6d_iv
       -in ./app_controllers/secrets/kubernetesConfig.yml.enc -out ./app_controllers/secrets/kubernetesConfig.yml
       -d
