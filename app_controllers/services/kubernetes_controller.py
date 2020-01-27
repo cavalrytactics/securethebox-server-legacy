@@ -110,7 +110,7 @@ class KubernetesController():
                         ivVariableKEY = variable
                         ivVariableVALUE = self.encryptedEnvironmentVariables[variable]
                 os.chdir(fullencryptedFilePath)
-                subprocess.Popen([f"openssl aes-256-cbc -K {keyVariableVALUE} -iv {ivVariableVALUE} -in {encryptedFileName} -out {fullencryptedFilePath}{unencryptedFileName} -d"],shell=True).wait()
+                subprocess.Popen([f"openssl aes-256-cbc -K {keyVariableVALUE} -iv {ivVariableVALUE} -in {encryptedFileName} -out {unencryptedFileName} -d"],shell=True).wait()
                 os.chdir(self.currentDirectory)
                 return True
             else:
