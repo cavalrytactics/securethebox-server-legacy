@@ -2,7 +2,7 @@ branches:
   only:
   - master
   - testing-00001
-matrix:
+jobs:
   include:
   - before_install:
     - echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt
@@ -19,9 +19,7 @@ matrix:
     cache:
       directories: $HOME/google-cloud-sdk
     env:
-      global:
-      - CLOUDSDK_CORE_DISABLE_PROMPTS=1
-      - CLOUDSDK_INSTALL_DIR=$HOME/google-cloud-sdk
+      global: CLOUDSDK_CORE_DISABLE_PROMPTS=1 CLOUDSDK_INSTALL_DIR=$HOME/google-cloud-sdk
     install:
     - pip install -r requirements.txt
     language: python
@@ -31,3 +29,6 @@ matrix:
     - pytest -vs -x tests/
     services:
     - docker
+language: python
+python:
+- '3.7'

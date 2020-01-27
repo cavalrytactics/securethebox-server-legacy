@@ -59,8 +59,8 @@ class KubernetesController():
                         dep = ""
                         with open("./.travis.yml","r") as f:
                             dep = yaml.safe_load(f)
-                            if decryptCommand not in dep["matrix"]["include"][0]["before_install"]:
-                                dep["matrix"]["include"][0]["before_install"].append(decryptCommand)
+                            if decryptCommand not in dep["jobs"]["include"][0]["before_install"]:
+                                dep["jobs"]["include"][0]["before_install"].append(decryptCommand)
                         with open("./.travis.yml","w") as f:
                             yaml.dump(dep, f)
                         os.rename(f"{self.currentDirectory}/{encryptedFileName}",f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
