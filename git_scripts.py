@@ -18,6 +18,7 @@ class GitControl():
         self.git_upstream = ""
         self.arguments = []
         self.pytest_result = False
+        self.lint_travis_result = False
 
     def setArguments(self, args):
         self.arguments = args
@@ -44,6 +45,13 @@ class GitControl():
         else:
             self.pytest_result = True
     
+    def lintTravisCheck(self):
+        failures = subprocess.Popen([f"travis lint"],shell=True).wait()
+        if failures >= 1:
+            self.lint_travis_result = False
+        else:
+            self.lint_travis_result = True
+
     def interpretArgs(self):
         self.setGithubProjectName()
         self.setGithubProjectUser()
@@ -63,16 +71,18 @@ class GitControl():
         
         # Pushing Master
         elif self.arguments[0] == "git-push-master":
+            self.lintTravisCheck()
             self.pytestCheck()
-            if self.pytest_result == True:
+            if self.pytest_result == True and self.lint_travis_result == True:
                 subprocess.Popen([f"git checkout master && git add . && git cz ; git push"],shell=True).wait()
             else:
                 print("PYTEST FAILED!")
         
         # Pushing Branch
         elif self.arguments[0] == "git-push-branch":
+            self.lintTravisCheck()
             self.pytestCheck()
-            if self.pytest_result == True:
+            if self.pytest_result == True and self.lint_travis_result == True:
                 if self.git_current_branch != "master":
                     subprocess.Popen([f"git add ."],shell=True).wait()
                     subprocess.Popen([f"git cz && git push --set-upstream origin "+self.git_current_branch+" && cross-var \"open https://github.com/"+self.git_user+"/"+self.git_fork_name+"/compare/master..."+self.git_user+":"+self.git_current_branch+"?expand=1\""],shell=True).wait()
@@ -115,6 +125,13 @@ class GitControl():
 
         elif self.arguments[0] == "pytest-all":
             failures = subprocess.Popen([f"pytest -vs -x tests/"],shell=True).wait()
+            if failures >= 1:
+                return False
+            else:
+                return True
+        
+        elif self.arguments[0] == "lint-travis":
+            failures = subprocess.Popen([f"travis lint"],shell=True).wait()
             if failures >= 1:
                 return False
             else:

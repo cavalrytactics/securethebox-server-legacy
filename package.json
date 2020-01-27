@@ -18,6 +18,7 @@
     "docker-k": "python git_scripts.py docker-kill-all",
     "images-a": "python git_scripts.py docker-images-delete-all",
     "pytest": "python git_scripts.py pytest-all",
+    "lint": "python git_scripts.py lint-travis",
     "kill": "sudo lsof -t -i tcp:5000  | xargs kill"
   },
   "repository": {

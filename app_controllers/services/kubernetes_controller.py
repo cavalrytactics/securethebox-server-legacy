@@ -47,14 +47,11 @@ class KubernetesController():
                 keyEnvironmentVariable = ""
                 ivEnvironmentVariable = ""
                 while finished:
-                    print("while looop")
                     output = process.stdout.readline()
-                    print(output.strip().decode("utf-8"))
                     if output == '' and process.poll() is not None:
                         finished = True
                     
                     if "openssl" in output.strip().decode("utf-8"):
-                        print(output.strip().decode("utf-8"))
                         decryptCommand = str(output.strip().decode("utf-8")).replace("kubernetesConfig.yml.enc","./app_controllers/secrets/kubernetesConfig.yml.enc")
                         dep = ""
                         with open("./.travis.yml","r") as f:
@@ -80,18 +77,12 @@ class KubernetesController():
                         ivVariableKEY = ivEnvironmentVariable
                     
                     if "key:" in output.strip().decode("utf-8"):
-                        print(output.strip().decode("utf-8"))
                         setattr(self, keyVariableKEY, output.strip().decode("utf-8"))
-                        print(keyVariableKEY,output.strip().decode("utf-8"))
                         self.encryptedEnvironmentVariables[keyVariableKEY] = output.strip().decode("utf-8").replace("key:","").strip()
                         
                     if "iv:" in output.strip().decode("utf-8"):
-                        print(output.strip().decode("utf-8"))
                         setattr(self, ivVariableKEY, output.strip().decode("utf-8"))
-                        print(ivVariableKEY,output.strip().decode("utf-8"))
                         self.encryptedEnvironmentVariables[ivVariableKEY] = output.strip().decode("utf-8").replace("iv:","").strip()
-                        
-                        print("SELF:",self.encryptedEnvironmentVariables)
                         return True
             else:
                 print("Unencrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
