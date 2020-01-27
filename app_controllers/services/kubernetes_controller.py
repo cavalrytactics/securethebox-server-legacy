@@ -118,7 +118,9 @@ class KubernetesController():
                     elif "iv" in variable:
                         ivVariableKEY = variable
                         ivVariableVALUE = self.encryptedEnvironmentVariables[variable]
-                subprocess.Popen([f"openssl aes-256-cbc -K {keyVariableVALUE} -iv {ivVariableVALUE} -in {fullencryptedFilePath}{encryptedFileName} -out {fullencryptedFilePath}{unencryptedFileName} -d"],shell=True).wait()
+                os.chdir(fullencryptedFilePath)
+                subprocess.Popen([f"openssl aes-256-cbc -K {keyVariableVALUE} -iv {ivVariableVALUE} -in {encryptedFileName} -out {fullencryptedFilePath}{unencryptedFileName} -d"],shell=True).wait()
+                os.chdir(self.currentDirectory)
                 return True
             else:
                 print("Encrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")

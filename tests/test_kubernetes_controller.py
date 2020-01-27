@@ -24,12 +24,12 @@ def test_setFileName():
     for file in testData["unencryptedFileNames"]:
         assert kc.setFileName(file) == True
 
-def test_setTravisEncryptFile():
-    kc.setCurrentDirectory() == True
+def test_setTravisEncryptDecryptFile():
+    kc.setCurrentDirectory()
     for file in testData["unencryptedFileNames"]:
         kc.setFileName(file)
-        kc.setTravisEncryptFile()
-        kc.setTravisUnencryptFile()
+        assert kc.setTravisEncryptFile() == True
+        assert kc.setTravisUnencryptFile() == True
 
 def test_setClusterName():
     assert kc.setClusterName(testData["clusterName"]) == True
