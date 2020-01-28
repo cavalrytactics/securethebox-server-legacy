@@ -62,7 +62,7 @@ class KubernetesController():
                         dep = ""
                         with open("./.travis.yml","r") as f:
                             dep = yaml.safe_load(f)
-                            finalDecryptCommand = decryptCommand.replace("./app_controllers/secrets/kubernetesConfig.yml -d","kubernetesConfig.yml -d ; cd ../../")
+                            finalDecryptCommand = decryptCommand.replace("./app_controllers/secrets/kubernetesConfig.yml -d", "kubernetesConfig.yml -d ; mkdir -p $HOME/.kube/ ; cp kubernetesConfig.yml $HOME/.kube/kubernetesConfig.yml ; cd ../../")
                             if finalDecryptCommand not in dep["jobs"]["include"][0]["before_install"]:
                                 dep["jobs"]["include"][0]["before_install"].append(finalDecryptCommand)
                         with open("./.travis.yml","w") as f:
@@ -287,20 +287,31 @@ class KubernetesController():
             return False
 
     def manageIngressPod(self):
-        config.load_kube_config(config_file="./app_controllers/secrets/kubernetesConfig.yml")
         try:
+            config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
             fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
             currentDirectory = self.currentDirectory
             for file in fileList:
-                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
-                try:
-                    k8s_client = client.ApiClient()
-                    print(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
-                    utils.create_from_yaml(k8s_client, f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
-                    print("Created utils")
-                    k8s_api = client.ExtensionsV1beta1Api(k8s_client)
-                    deps = k8s_api.read_namespaced_deployment(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml", "default")
-                    print("Deployment {0} created".format(deps.metadata.name))
+                print(file)
+                if "deployment" in file:
+                    fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
+                    try:
+                        with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml","r") as f:
+                            print("opened file...")
+                            dep = yaml.safe_load(f)
+                            print(dep)
+                            k8s_apps_v1 = client.AppsV1Api()
+                            print(k8s_apps_v1)
+                            resp = k8s_apps_v1.create_namespaced_deployment(body=dep, namespace="default")
+                            # print("Deployment created. status='%s'" % resp.metadata.name)
+
+                    # k8s_client = client.ApiClient()
+                    # print(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                    # utils.create_from_yaml(k8s_client, f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                    # print("Created utils")
+                    # k8s_api = client.ExtensionsV1beta1Api(k8s_client)
+                    # deps = k8s_api.read_namespaced_deployment(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml", "default")
+                    # print("Deployment {0} created".format(deps.metadata.name))
 
 
                     # with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml") as f:
@@ -314,16 +325,16 @@ class KubernetesController():
                     #     elif self.kubectlAction == "delete":
                     #         resp = k8s_client.delete_namespaced_deployment(body=dep, namespace="default")
                     #         print("Deployment deleted. status='%s'" % resp.metadata.name)
-                except:
-                    print("Error", f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
-                    return False
+                    except:
+                        print("Error", f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                        return False
             return True
         except:
             return False
 
 def manageAuthenticationPod(self):
-        config.load_kube_config(config_file="./app_controllers/secrets/kubernetesConfig.yml")
         try:
+            config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
             fileList = ["01_deployment", "02_service", "03_ingress"]
             currentDirectory = self.currentDirectory
             for file in fileList:

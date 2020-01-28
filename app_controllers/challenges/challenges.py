@@ -75,11 +75,10 @@ from google.auth import impersonated_credentials
 import google.auth.crypt
 import google.auth.jwt
 import time
+import os
 
-readgoogleClientId = open('./app_controllers/secrets/googleClientId.txt','r')
-googleClientId = readgoogleClientId.read().rstrip('\n')
-readgoogleClientSecret = open('./app_controllers/secrets/googleClientSecret.txt','r')
-googleClientSecret = readgoogleClientSecret.read().rstrip('\n')
+googleClientId = os.getenv("GOOGLE_CLIENT_ID")
+googleClientSecret = os.getenv("GOOGLE_CLIENT_SECRET")
 
 def generate_jwt(sa_keyfile='./app_controllers/secrets/serviceAccount.json',
                  sa_email='service-account@securethebox.iam.gserviceaccount.com',

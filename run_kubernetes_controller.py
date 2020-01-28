@@ -31,22 +31,17 @@ def test_setFileName():
         assert kc.setFileName(file) == True
 
 
-def setTravisEncryptDecryptFile():
-    kc.setCurrentDirectory()
-    for file in testData["unencryptedFileNames"]:
-        kc.setFileName(file)
-        print("Encrypting",file)
-        kc.setTravisEncryptFile()
-
-def test_manageIngressPod():
+def manageIngressPod():
+    print("Starting ingress..")
     kc.setCurrentDirectory()
     kc.setClusterName(testData["clusterName"])
     kc.setServiceName(testData["serviceName_ingress"])
+    kc.setUserName(testData["userName"])
     kc.setKubectlAction(testData["kubectlAction_apply"])
+    kc.generateIngressYamlFiles()
     kc.manageIngressPod()
 
 if __name__ == "__main__":
-    command = 'lsdd'
-    print(shutil.which(command))
+    manageIngressPod()
 
     
