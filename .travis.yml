@@ -12,7 +12,10 @@ jobs:
     - sudo apt-get update -y
     - sudo apt-get install google-cloud-sdk -y
     - sudo apt-get install kubectl -y
+    - sudo gem install travis --no-rdoc --no-ri
     - cd ./app_controllers/secrets/
+    - openssl aes-256-cbc -K $encrypted_8902be8eea6d_key -iv $encrypted_8902be8eea6d_iv
+      -in kubernetesConfig.yml.enc -out kubernetesConfig.yml -d ; cd ../../
     - openssl aes-256-cbc -K $encrypted_8902be8eea6d_key -iv $encrypted_8902be8eea6d_iv
       -in kubernetesConfig.yml.enc -out kubernetesConfig.yml -d ; cd ../../
     cache:
