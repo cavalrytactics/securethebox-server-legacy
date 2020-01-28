@@ -5,6 +5,7 @@ import subprocess
 from os import path
 from subprocess import check_output
 import re
+import shutil
 
 kc = KubernetesController()
 
@@ -37,6 +38,15 @@ def setTravisEncryptDecryptFile():
         print("Encrypting",file)
         kc.setTravisEncryptFile()
 
+def test_manageIngressPod():
+    kc.setCurrentDirectory()
+    kc.setClusterName(testData["clusterName"])
+    kc.setServiceName(testData["serviceName_ingress"])
+    kc.setKubectlAction(testData["kubectlAction_apply"])
+    kc.manageIngressPod()
+
 if __name__ == "__main__":
-    setTravisEncryptDecryptFile()
+    command = 'lsdd'
+    print(shutil.which(command))
+
     

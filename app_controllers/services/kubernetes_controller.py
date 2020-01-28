@@ -10,6 +10,7 @@ import yaml
 from kubernetes import client, config, utils
 from kubernetes.client import configuration
 import re
+import shutil
 
 class KubernetesController():
     def __init__(self):
@@ -36,6 +37,12 @@ class KubernetesController():
             unencryptedFileName = self.fileName
             encryptedFileName = f"{unencryptedFileName}.enc"
             fileExists = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
+            encryptedFileExists = path.exists(f"{fullUncryptedFilePath}{encryptedFileName}")
+
+            if shutil.which("travis") is None:
+                print("Travis command does not exist!")
+                return True
+
             if fileExists == True:
                 process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/kubernetesConfig.yml"],stdout=subprocess.PIPE, shell=True)
                 finished = True
@@ -314,7 +321,7 @@ class KubernetesController():
         except:
             return False
 
-    def manageAuthenticationPod(self):
+def manageAuthenticationPod(self):
         config.load_kube_config(config_file="./app_controllers/secrets/kubernetesConfig.yml")
         try:
             fileList = ["01_deployment", "02_service", "03_ingress"]
@@ -347,6 +354,8 @@ class KubernetesController():
             return True
         except:
             return False
+
+    
 
 def kubernetesGetPodId(serviceName, userName):
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
@@ -399,8 +408,6 @@ def kubernetesCreatePersistentVolumes(action):
     print('Creating Persistent Volume and Claim')
     subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True).wait()
-    # kubectl apply -f ./app_controllers/infrastructure/kubernetes-deployments/storage/challenges/persistent-volume.yml
-    # kubectl apply -f ./app_controllers/infrastructure/kubernetes-deployments/storage/challenges/persistent-volume-claim.yml
 
 def kubernetesManagePods(clusterName, serviceName, userName, action):
     subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()

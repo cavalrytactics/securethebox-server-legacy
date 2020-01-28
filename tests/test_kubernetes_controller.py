@@ -46,14 +46,7 @@ def test_setEmailAddress():
 def test_setEnvironmentVariables():
     for var in testData["environmentVariablesList"]:
         assert kc.setEnvironmentVariable(var) == True
-# def test_setGoogleClientId():
-#     kc.setCurrentDirectory()
-#     assert kc.setGoogleClientId() == True
-
-# def test_setGoogleClientSecret():
-#     kc.setCurrentDirectory()
-#     assert kc.setGoogleClientSecret() == True
-
+        
 def test_setPodId():
     assert kc.setPodId(testData["dockerePodId"]) == True
 
