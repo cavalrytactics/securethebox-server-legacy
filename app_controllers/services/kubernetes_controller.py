@@ -50,18 +50,17 @@ class KubernetesController():
                     output = process.stdout.readline()
                     if output == '' and process.poll() is not None:
                         finished = True
-                    
                     if "openssl" in output.strip().decode("utf-8"):
                         decryptCommand = str(output.strip().decode("utf-8"))
                         dep = ""
                         with open("./.travis.yml","r") as f:
                             dep = yaml.safe_load(f)
-                            if decryptCommand not in dep["jobs"]["include"][0]["before_install"]:
-                                dep["jobs"]["include"][0]["before_install"].append(decryptCommand.replace("./app_controllers/secrets/kubernetesConfig.yml -d","kubernetesConfig.yml -d ; cd ../../"))
+                            finalDecryptCommand = decryptCommand.replace("./app_controllers/secrets/kubernetesConfig.yml -d","kubernetesConfig.yml -d ; cd ../../")
+                            if finalDecryptCommand not in dep["jobs"]["include"][0]["before_install"]:
+                                dep["jobs"]["include"][0]["before_install"].append(finalDecryptCommand)
                         with open("./.travis.yml","w") as f:
                             yaml.dump(dep, f)
                         os.rename(f"{self.currentDirectory}/{encryptedFileName}",f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
-
                         keyEnvironmentVariableMatch = re.finditer("(([$]encrypted.)(.*[_]key))", str(decryptCommand), re.MULTILINE)
                         ivEnvironmentVariableMatch1 = re.finditer("([-]iv.)([$]encrypted.)(.*[_]iv)", str(decryptCommand), re.MULTILINE)
                         for matchNum, match in enumerate(keyEnvironmentVariableMatch, start=1):

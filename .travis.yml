@@ -16,8 +16,6 @@ jobs:
     - cd ./app_controllers/secrets/
     - openssl aes-256-cbc -K $encrypted_8902be8eea6d_key -iv $encrypted_8902be8eea6d_iv
       -in kubernetesConfig.yml.enc -out kubernetesConfig.yml -d ; cd ../../
-    - openssl aes-256-cbc -K $encrypted_8902be8eea6d_key -iv $encrypted_8902be8eea6d_iv
-      -in kubernetesConfig.yml.enc -out kubernetesConfig.yml -d ; cd ../../
     cache:
       directories: $HOME/google-cloud-sdk
     env:
