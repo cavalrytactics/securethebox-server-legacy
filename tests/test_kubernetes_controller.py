@@ -14,7 +14,12 @@ testData = {
     "kubectlAction_delete": "delete",
     "dockerePodId": "pod_id_123",
     "unencryptedFileNames": ["securethebox-service-account.json"],
-    "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]
+    "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    "googleProjectId": "cavalrytactics",
+    "googleKubernetesComputeZone": "us-west1-a",
+    "googleKubernetesComputeCluster": "test",
+    "googleServiceAccountEmail": "kubernetes-service-account@cavalrytactics.iam.gserviceaccount.com",
+    "googleServiceAccountFile": "securethebox-service-account.json",
 }
 
 def test_setCurrentDirectory():
@@ -100,6 +105,24 @@ def test_deleteAuthenticationYamlFiles():
     for var in testData["environmentVariablesList"]:
         assert kc.setEnvironmentVariable(var)
     assert kc.deleteAuthenticationYamlFiles() == True
+
+def test_setGoogleProjectId():
+    assert kc.setGoogleProjectId(testData["googleProjectId"]) == True
+
+def test_setGoogleKubernetesComputeZone():
+    assert kc.setGoogleKubernetesComputeZone(testData["googleKubernetesComputeZone"]) == True
+
+def test_setGoogleKubernetesComputeCluster():
+    assert kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"]) == True
+
+def test_setGoogleServiceAccountEmail():
+    assert kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"]) == True
+
+def test_loadGoogleKubernetesServiceAccount():
+    kc.setCurrentDirectory()
+    kc.setFileName(testData["googleServiceAccountFile"])
+    kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
+    assert kc.loadGoogleKubernetesServiceAccount() == True
 
 # def test_getKubernetesApiToken():
 #     assert kc.getKubernetesApiToken() == True

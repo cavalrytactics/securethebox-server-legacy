@@ -13,6 +13,7 @@ from kubernetes.client.rest import ApiException
 import re
 import shutil
 import requests
+from google.cloud import container_v1
 
 class KubernetesController():
     def __init__(self):
@@ -28,8 +29,12 @@ class KubernetesController():
         self.kubernetesDeploymentImage = ""
         self.kubernetesDeploymentName = ""
         self.kubernetesHost = ""
-        self.kubernetesApiToken = ""
-        self.kubernetesSSLCert = ""
+        self.googleProjectId = ""
+        self.googleCredentials = ""
+        self.googleKubernetesComputeZone = ""
+        self.googleKubernetesComputeCluster = ""
+        self.googleKubernetesClusterOperationInfo = ""
+        self.googleServiceAccountEmail = ""
 
     def setFileName(self, fileName):
         try:
@@ -69,7 +74,7 @@ class KubernetesController():
                         dep = ""
                         with open("./.travis.yml","r") as f:
                             dep = yaml.safe_load(f)
-                            finalDecryptCommand = decryptCommand.replace(f"./app_controllers/secrets/{self.fileName} -d", f"{self.fileName} -d ; mkdir -p $HOME/.kube/ ; cp {self.fileName} $HOME/.kube/config ; cd ../../")
+                            finalDecryptCommand = decryptCommand.replace(f"./app_controllers/secrets/{self.fileName} -d", f"{self.fileName} -d ; cd ../../")
                             if finalDecryptCommand not in dep["jobs"]["include"][0]["before_install"]:
                                 dep["jobs"]["include"][0]["before_install"].append(finalDecryptCommand)
                         with open("./.travis.yml","w") as f:
@@ -131,85 +136,6 @@ class KubernetesController():
             return True
         except:
             print("You may need to login to Travis")
-            return False
-            
-    def getKubernetesApiToken(self):
-        try:
-            if shutil.which("kubectl") is not None:
-                print("kubectl exists")
-                APISERVERcommand = ["kubectl","config","view","--minify","-o","jsonpath='{.clusters[0].cluster.server}'"]
-                APISERVER = str(check_output(APISERVERcommand).decode("utf-8").replace("'",""))
-                self.kubernetesHost = APISERVER
-                print("APISERVER",APISERVER)
-                # APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-                SECRETNAMEcommand = ["kubectl","get","serviceaccount","default","-o","jsonpath='{.secrets[0].name}'"]
-                SECRETNAME = str(check_output(SECRETNAMEcommand).decode("utf-8").replace("'",""))
-                # SECRET_NAME=$(kubectl get serviceaccount default -o jsonpath='{.secrets[0].name}')
-                TOKENcommand = ["kubectl","get","secret",SECRETNAME,"-o","jsonpath='{.data.token}'"]
-                TOKEN = str(check_output(TOKENcommand).decode("utf-8").replace("'",""))
-                # TOKEN=$(kubectl get secret $SECRET_NAME -o jsonpath='{.data.token}' | base64 --decode)
-                self.kubernetesApiToken = TOKEN
-                headers = {"Authorization": f"Bearer {self.kubernetesApiToken}"}
-                rep = requests.get(self.kubernetesHost,headers=headers,verify=False)
-                print("RESPONSE:",rep.text)
-                return True
-            else:
-                print("kubectl does not exist!")
-        except:
-            return False
-
-    def selectKubernetesContext(self):
-        contexts, active_context = config.list_kube_config_contexts()
-        if not contexts:
-            print("Cannot find any context in kube-config file.")
-            return
-        contexts = [context['name'] for context in contexts]
-        active_index = contexts.index(active_context['name'])
-        print(contexts, active_index)
-        # option, _ = pick(contexts, title="Pick the context to load",
-        #              default_index=active_index)
-        # Configs can be set in Configuration class directly or using helper
-        # utility
-        config.load_kube_config(context="kubesail-ncmd")
-
-        print("Active host is %s" % configuration.Configuration().host)
-
-        v1 = client.CoreV1Api()
-        print("Listing pods with their IPs:")
-        ret = v1.list_pod_for_all_namespaces(watch=False)
-        for item in ret.items:
-            print(
-                "%s\t%s\t%s" %
-                (item.status.pod_ip,
-                item.metadata.namespace,
-                item.metadata.name))
-
-    def loadKubernetesConfig(self):
-        try:
-            aToken = self.kubernetesApiToken
-            aConfiguration = client.Configuration()
-            aConfiguration.host = self.kubernetesHost
-            print(aConfiguration.host)
-            aConfiguration.verify_ssl = False
-            aConfiguration.api_key["authorization"] = aToken
-            aConfiguration.ssl_ca_cert = self.kubernetesSSLCert
-            # aConfiguration.api_key_prefix['authorization'] = 'Bearer'
-            print(aToken)
-            # aApiClient = client.ApiClient(aConfiguration)
-            # print("aApiClient",aApiClient)
-            # v1 = client.CoreV1Api(aApiClient)
-            # print("v1",v1)
-            # ret = v1.get_api_resources()
-            # create an instance of the API class
-            api_instance = client.CoreV1Api(client.ApiClient(configuration))
-
-            try:
-                api_response = api_instance.get_api_resources()
-                print(api_response)
-            except ApiException as e:
-                print("Exception when calling CoreV1Api->get_api_resources: %s\n" % e)
-        except:
-            print("broke")
             return False
 
     def setCurrentDirectory(self):
@@ -371,6 +297,100 @@ class KubernetesController():
         except:
             return False
 
+    def setGoogleProjectId(self, googleProjectId):
+        try:
+            self.googleProjectId = googleProjectId
+            return True
+        except:
+            return False
+    
+    def setGoogleKubernetesComputeZone(self, googleKubernetesComputeZone):
+        try:
+            self.googleKubernetesComputeZone = googleKubernetesComputeZone
+            return True
+        except:
+            return False
+
+    def setGoogleKubernetesComputeCluster(self, googleKubernetesComputeZone):
+        try:
+            self.googleKubernetesComputeZone = googleKubernetesComputeZone
+            return True
+        except:
+            return False
+
+    def setGoogleServiceAccountEmail(self, googleServiceAccountEmail):
+        try:
+            self.googleServiceAccountEmail = googleServiceAccountEmail
+            return True
+        except:
+            return False
+
+    def loadGoogleKubernetesServiceAccount(self):
+        try:
+            subprocess.Popen([f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName} >> /dev/null 2>&1"],shell=True).wait()
+            subprocess.Popen([f"gcloud config set account {self.googleServiceAccountEmail} >> /dev/null 2>&1"],shell=True).wait()
+            return True
+        except:
+            return False
+
+    def loadKubernetesConfig(self):
+        try:
+
+            return True
+        except:
+            return False
+
+    # def getKubernetesApiToken(self):
+    #     try:
+    #         if shutil.which("kubectl") is not None:
+    #             print("kubectl exists")
+    #             APISERVERcommand = ["kubectl","config","view","--minify","-o","jsonpath='{.clusters[0].cluster.server}'"]
+    #             APISERVER = str(check_output(APISERVERcommand).decode("utf-8").replace("'",""))
+    #             self.kubernetesHost = APISERVER
+    #             print("APISERVER",APISERVER)
+    #             # APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+    #             SECRETNAMEcommand = ["kubectl","get","serviceaccount","default","-o","jsonpath='{.secrets[0].name}'"]
+    #             SECRETNAME = str(check_output(SECRETNAMEcommand).decode("utf-8").replace("'",""))
+    #             # SECRET_NAME=$(kubectl get serviceaccount default -o jsonpath='{.secrets[0].name}')
+    #             TOKENcommand = ["kubectl","get","secret",SECRETNAME,"-o","jsonpath='{.data.token}'"]
+    #             TOKEN = str(check_output(TOKENcommand).decode("utf-8").replace("'",""))
+    #             # TOKEN=$(kubectl get secret $SECRET_NAME -o jsonpath='{.data.token}' | base64 --decode)
+    #             self.kubernetesApiToken = TOKEN
+    #             headers = {"Authorization": f"Bearer {self.kubernetesApiToken}"}
+    #             rep = requests.get(self.kubernetesHost,headers=headers,verify=False)
+    #             print("RESPONSE:",rep.text)
+    #             return True
+    #         else:
+    #             print("kubectl does not exist!")
+    #     except:
+    #         return False
+
+    # def selectKubernetesContext(self):
+    #     contexts, active_context = config.list_kube_config_contexts()
+    #     if not contexts:
+    #         print("Cannot find any context in kube-config file.")
+    #         return
+    #     contexts = [context['name'] for context in contexts]
+    #     active_index = contexts.index(active_context['name'])
+    #     print(contexts, active_index)
+    #     # option, _ = pick(contexts, title="Pick the context to load",
+    #     #              default_index=active_index)
+    #     # Configs can be set in Configuration class directly or using helper
+    #     # utility
+    #     config.load_kube_config(context="kubesail-ncmd")
+
+    #     print("Active host is %s" % configuration.Configuration().host)
+
+    #     v1 = client.CoreV1Api()
+    #     print("Listing pods with their IPs:")
+    #     ret = v1.list_pod_for_all_namespaces(watch=False)
+    #     for item in ret.items:
+    #         print(
+    #             "%s\t%s\t%s" %
+    #             (item.status.pod_ip,
+    #             item.metadata.namespace,
+    #             item.metadata.name))
+
     # def kubernetesCreateServiceAccount(self):
     #     config.load_kube_config(context=(),config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
     #     # print(self.currentDirectory)
@@ -515,10 +535,10 @@ class KubernetesController():
         
         # Creation of the Deployment in specified namespace
         # (Can replace "default" with a namespace you may have created)
-        client.NetworkingV1beta1Api().create_namespaced_ingress(
-            namespace="default",
-            body=body
-        )
+        # client.NetworkingV1beta1Api().create_namespaced_ingress(
+        #     namespace="default",
+        #     body=body
+        # )
     # def manageIngressPod(self):
     #     try:
     #         config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
