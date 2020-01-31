@@ -9,8 +9,10 @@ from os import environ
 import yaml
 from kubernetes import client, config, utils
 from kubernetes.client import configuration
+from kubernetes.client.rest import ApiException
 import re
 import shutil
+import requests
 
 class KubernetesController():
     def __init__(self):
@@ -23,6 +25,11 @@ class KubernetesController():
         self.kubectlAction = ""
         self.fileName = ""
         self.encryptedEnvironmentVariables = {}
+        self.kubernetesDeploymentImage = ""
+        self.kubernetesDeploymentName = ""
+        self.kubernetesHost = ""
+        self.kubernetesApiToken = ""
+        self.kubernetesSSLCert = ""
 
     def setFileName(self, fileName):
         try:
@@ -44,7 +51,7 @@ class KubernetesController():
                 return True
 
             if fileExists == True:
-                process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/kubernetesConfig.yml"],stdout=subprocess.PIPE, shell=True)
+                process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/{self.fileName}"],stdout=subprocess.PIPE, shell=True)
                 finished = True
                 keyVariableKEY = ""
                 keyVariableVALUE = ""
@@ -62,7 +69,7 @@ class KubernetesController():
                         dep = ""
                         with open("./.travis.yml","r") as f:
                             dep = yaml.safe_load(f)
-                            finalDecryptCommand = decryptCommand.replace("./app_controllers/secrets/kubernetesConfig.yml -d", "kubernetesConfig.yml -d ; mkdir -p $HOME/.kube/ ; cp kubernetesConfig.yml $HOME/.kube/kubernetesConfig.yml ; cd ../../")
+                            finalDecryptCommand = decryptCommand.replace(f"./app_controllers/secrets/{self.fileName} -d", f"{self.fileName} -d ; mkdir -p $HOME/.kube/ ; cp {self.fileName} $HOME/.kube/config ; cd ../../")
                             if finalDecryptCommand not in dep["jobs"]["include"][0]["before_install"]:
                                 dep["jobs"]["include"][0]["before_install"].append(finalDecryptCommand)
                         with open("./.travis.yml","w") as f:
@@ -126,11 +133,83 @@ class KubernetesController():
             print("You may need to login to Travis")
             return False
             
-    def loadRemoteConfig(self):
+    def getKubernetesApiToken(self):
         try:
-            config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
-            return True
+            if shutil.which("kubectl") is not None:
+                print("kubectl exists")
+                APISERVERcommand = ["kubectl","config","view","--minify","-o","jsonpath='{.clusters[0].cluster.server}'"]
+                APISERVER = str(check_output(APISERVERcommand).decode("utf-8").replace("'",""))
+                self.kubernetesHost = APISERVER
+                print("APISERVER",APISERVER)
+                # APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+                SECRETNAMEcommand = ["kubectl","get","serviceaccount","default","-o","jsonpath='{.secrets[0].name}'"]
+                SECRETNAME = str(check_output(SECRETNAMEcommand).decode("utf-8").replace("'",""))
+                # SECRET_NAME=$(kubectl get serviceaccount default -o jsonpath='{.secrets[0].name}')
+                TOKENcommand = ["kubectl","get","secret",SECRETNAME,"-o","jsonpath='{.data.token}'"]
+                TOKEN = str(check_output(TOKENcommand).decode("utf-8").replace("'",""))
+                # TOKEN=$(kubectl get secret $SECRET_NAME -o jsonpath='{.data.token}' | base64 --decode)
+                self.kubernetesApiToken = TOKEN
+                headers = {"Authorization": f"Bearer {self.kubernetesApiToken}"}
+                rep = requests.get(self.kubernetesHost,headers=headers,verify=False)
+                print("RESPONSE:",rep.text)
+                return True
+            else:
+                print("kubectl does not exist!")
         except:
+            return False
+
+    def selectKubernetesContext(self):
+        contexts, active_context = config.list_kube_config_contexts()
+        if not contexts:
+            print("Cannot find any context in kube-config file.")
+            return
+        contexts = [context['name'] for context in contexts]
+        active_index = contexts.index(active_context['name'])
+        print(contexts, active_index)
+        # option, _ = pick(contexts, title="Pick the context to load",
+        #              default_index=active_index)
+        # Configs can be set in Configuration class directly or using helper
+        # utility
+        config.load_kube_config(context="kubesail-ncmd")
+
+        print("Active host is %s" % configuration.Configuration().host)
+
+        v1 = client.CoreV1Api()
+        print("Listing pods with their IPs:")
+        ret = v1.list_pod_for_all_namespaces(watch=False)
+        for item in ret.items:
+            print(
+                "%s\t%s\t%s" %
+                (item.status.pod_ip,
+                item.metadata.namespace,
+                item.metadata.name))
+
+    def loadKubernetesConfig(self):
+        try:
+            aToken = self.kubernetesApiToken
+            aConfiguration = client.Configuration()
+            aConfiguration.host = self.kubernetesHost
+            print(aConfiguration.host)
+            aConfiguration.verify_ssl = False
+            aConfiguration.api_key["authorization"] = aToken
+            aConfiguration.ssl_ca_cert = self.kubernetesSSLCert
+            # aConfiguration.api_key_prefix['authorization'] = 'Bearer'
+            print(aToken)
+            # aApiClient = client.ApiClient(aConfiguration)
+            # print("aApiClient",aApiClient)
+            # v1 = client.CoreV1Api(aApiClient)
+            # print("v1",v1)
+            # ret = v1.get_api_resources()
+            # create an instance of the API class
+            api_instance = client.CoreV1Api(client.ApiClient(configuration))
+
+            try:
+                api_response = api_instance.get_api_resources()
+                print(api_response)
+            except ApiException as e:
+                print("Exception when calling CoreV1Api->get_api_resources: %s\n" % e)
+        except:
+            print("broke")
             return False
 
     def setCurrentDirectory(self):
@@ -178,6 +257,12 @@ class KubernetesController():
             return True
         except:
             return False
+
+    def setKubernetesDeploymentName(self, kubernetesDeploymentName):
+        self.kubernetesDeploymentName = kubernetesDeploymentName
+
+    def setKubernetesDeploymentImage(self, kubernetesDeploymentImage):
+        self.kubernetesDeploymentImage = kubernetesDeploymentImage
 
     def setPodId(self, podId):
         try:
@@ -286,51 +371,189 @@ class KubernetesController():
         except:
             return False
 
-    def manageIngressPod(self):
-        try:
-            config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
-            fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
-            currentDirectory = self.currentDirectory
-            for file in fileList:
-                print(file)
-                if "deployment" in file:
-                    fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
-                    try:
-                        with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml","r") as f:
-                            print("opened file...")
-                            dep = yaml.safe_load(f)
-                            print(dep)
-                            k8s_apps_v1 = client.AppsV1Api()
-                            print(k8s_apps_v1)
-                            resp = k8s_apps_v1.create_namespaced_deployment(body=dep, namespace="default")
-                            # print("Deployment created. status='%s'" % resp.metadata.name)
-
-                    # k8s_client = client.ApiClient()
-                    # print(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
-                    # utils.create_from_yaml(k8s_client, f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
-                    # print("Created utils")
-                    # k8s_api = client.ExtensionsV1beta1Api(k8s_client)
-                    # deps = k8s_api.read_namespaced_deployment(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml", "default")
-                    # print("Deployment {0} created".format(deps.metadata.name))
+    # def kubernetesCreateServiceAccount(self):
+    #     config.load_kube_config(context=(),config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
+    #     # print(self.currentDirectory)
+    #     v1 = client.CoreV1Api()
+    #     print("Listing pods with their IPs:")
+    #     ret = v1.list_pod_for_all_namespaces(watch=False)
+    #     for i in ret.items:
+    #         print("%s\t%s\t%s" %
+    #             (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
 
 
-                    # with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml") as f:
-                    #     dep = yaml.safe_load(f)
-                    #     print("Loaded yaml",dep)
-                    #     k8s_client = client.ApiClient()
-                    #     if self.kubectlAction == "apply":
-                    #         print("Selected Apply")
-                    #         resp = k8s_client.ExtensionsV1beta1Api(body=dep, namespace="default")
-                    #         print("Deployment created. status='%s'" % resp.metadata.name)
-                    #     elif self.kubectlAction == "delete":
-                    #         resp = k8s_client.delete_namespaced_deployment(body=dep, namespace="default")
-                    #         print("Deployment deleted. status='%s'" % resp.metadata.name)
-                    except:
-                        print("Error", f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
-                        return False
-            return True
-        except:
-            return False
+    # def kubernetesCreateClusterRoleBinding(self):
+    #     # config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
+    #     config.load_kube_config()
+    #     role_ref = client.V1RoleRef(
+    #             api_group="rbac.authorization.k8s.io",
+    #             kind="ClusterRole",
+    #             name="cluster-admin"
+    #         )
+        
+    #     subjects = client.V1Subject(
+    #         api_group="rbac.authorization.k8s.io",
+    #         kind="User",
+    #         name="cchong.vise@gmail.com"
+    #         )
+
+        
+    #     cluster_role_binding = client.V1ClusterRoleBinding(
+    #         role_ref=role_ref,
+    #         api_version="rbac.authorization.k8s.io/v1",
+    #         kind="ClusterRoleBinding",
+    #         metadata=client.V1ObjectMeta(name="cluster-admin"),
+    #         subjects=subjects
+    #         )
+
+    #     api = client.CoreV1Api()
+
+    #     api.cluster_role_binding(
+    #         version="v1",
+    #         namespace="default",
+    #         body=cluster_role_binding,
+    #         group="rbac.authorization.k8s.io",
+    #         plural="cluster_role_binding"
+    #     )
+        
+
+    # def kubernetesCreateDeployment(self):
+    #     # config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
+    #     config.load_kube_config()
+    #     apps_v1_api = client.AppsV1Api()
+    #     volumeMounts = client.V1VolumeMount(
+    #         mount_path="/etc/traefik/config",
+    #         name="config"
+    #     )
+        
+    #     volumeConfig = client.V1ConfigMapVolumeSource(
+    #         name="traefik-config"
+    #     )
+
+    #     volumes = client.V1Volume(
+    #         name="config",
+    #         config_map=volumeConfig
+    #     )
+    #     container = client.V1Container(
+    #         name=self.kubernetesDeploymentName,
+    #         image=self.kubernetesDeploymentImage,
+    #         image_pull_policy="Never",
+    #         args=["--configfile=/etc/traefik/config/traefik.toml",
+    #         "--api","--kubernetes","--logLevel=DEBUG"],
+    #         volume_mounts=[volumeMounts],
+    #         ports=[
+    #             client.V1ContainerPort(container_port=443,name="https",protocol="TCP"),
+    #             client.V1ContainerPort(container_port=80,name="http",protocol="TCP"),
+    #             client.V1ContainerPort(container_port=8080,name="admin",protocol="TCP")],
+    #     )
+    #     # Template
+    #     template = client.V1PodTemplateSpec(
+    #         metadata=client.V1ObjectMeta(labels={"app": f"{self.serviceName}-{self.clusterName}-ingress-controller"}),
+    #         spec=client.V1PodSpec(containers=[container],service_account_name="traefik-us-west1-a-ingress-controller"))
+    #     # Spec
+    #     spec = client.V1DeploymentSpec(
+    #         replicas=1,
+    #         selector={"app":f"{self.serviceName}-{self.clusterName}-ingress-controller"},
+    #         template=template)
+    #     # Deployment
+    #     deployment = client.V1Deployment(
+    #         api_version="apps/v1",
+    #         kind="Deployment",
+    #         metadata=client.V1ObjectMeta(name=f"{self.serviceName}-{self.clusterName}-ingress-controller"),
+    #         spec=spec)
+    #     # Creation of the Deployment in specified namespace
+    #     # (Can replace "default" with a namespace you may have created)
+    #     apps_v1_api.create_namespaced_deployment(
+    #         namespace="default", body=deployment
+    #     )
+
+
+    # def kubernetesCreateService(self):
+    #     core_v1_api = client.CoreV1Api()
+    #     body = client.V1Service(
+    #         api_version="v1",
+    #         kind="Service",
+    #         metadata=client.V1ObjectMeta(
+    #             name="service-example"
+    #         ),
+    #         spec=client.V1ServiceSpec(
+    #             selector={"app": "deployment"},
+    #             ports=[client.V1ServicePort(
+    #                 port=5678,
+    #                 target_port=5678
+    #             )]
+    #         )
+    #     )
+    #     # Creation of the Deployment in specified namespace
+    #     # (Can replace "default" with a namespace you may have created)
+    #     core_v1_api.create_namespaced_service(namespace="default", body=body)
+
+
+    # def kubernetesCreateIngress(self):
+    #     body = client.NetworkingV1beta1Ingress(
+    #         api_version="networking.k8s.io/v1beta1",
+    #         kind="Ingress",
+    #         metadata=client.V1ObjectMeta(name="ingress-example", annotations={
+    #             "nginx.ingress.kubernetes.io/rewrite-target": "/"
+    #         }),
+    #         spec=client.NetworkingV1beta1IngressSpec(
+    #             rules=[client.NetworkingV1beta1IngressRule(
+    #                 host="example.com",
+    #                 http=client.NetworkingV1beta1HTTPIngressRuleValue(
+    #                     paths=[client.NetworkingV1beta1HTTPIngressPath(
+    #                         path="/",
+    #                         backend=client.NetworkingV1beta1IngressBackend(
+    #                             service_port=5678,
+    #                             service_name="service-example")
+
+    #                     )]
+    #                 )
+    #             )
+    #             ]
+    #         )
+    #     )
+        
+        # Creation of the Deployment in specified namespace
+        # (Can replace "default" with a namespace you may have created)
+        client.NetworkingV1beta1Api().create_namespaced_ingress(
+            namespace="default",
+            body=body
+        )
+    # def manageIngressPod(self):
+    #     try:
+    #         config.load_kube_config(config_file=self.currentDirectory+"/app_controllers/secrets/kubernetesConfig.yml")
+    #         fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
+    #         currentDirectory = self.currentDirectory
+    #         for file in fileList:
+    #             print(file)
+    #             if "deployment" in file:
+    #                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
+    #                 try:
+    #                     with open(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml","r") as f:
+    #                         print("opened file...")
+    #                         dep = yaml.safe_load(f)
+    #                         print(dep)
+    #                         k8s_apps_v1 = client.AppsV1Api()
+    #                         print(k8s_apps_v1)
+    #                         resp = k8s_apps_v1.create_namespaced_deployment(body=dep, namespace="default")
+    #                 except:
+    #                     print("Error", f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+    #                     return False
+    #         return True
+    #     except:
+    #         return False
+
+    # def kubernetesManageIngressPod(self):
+    #     # print(action,"Ingress Pod:",serviceName)
+    #     # print(f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/ingress/{serviceName}/01_{clusterName}-{serviceName}-permissions.yml")
+    #     subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/01_permissions-{self.clusterName}-{self.serviceName}.yml"],shell=True).wait()
+    #     subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/02_cluster-role-{self.clusterName}-{self.serviceName}.yml"],shell=True).wait()
+    #     subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/03_config-{self.clusterName}-{self.serviceName}.yml"],shell=True).wait()
+    #     subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/04_deployment-{self.clusterName}-{self.serviceName}.yml"],shell=True).wait()
+    #     subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/05_service-{self.clusterName}-{self.serviceName}.yml"],shell=True).wait()
+    #     subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/06_ingress-{self.clusterName}-{self.serviceName}.yml"],shell=True).wait()
+
+
 
 def manageAuthenticationPod(self):
         try:

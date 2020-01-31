@@ -13,7 +13,7 @@ testData = {
     "kubectlAction_apply": "apply",
     "kubectlAction_delete": "delete",
     "dockerePodId": "pod_id_123",
-    "unencryptedFileNames": ["kubernetesConfig.yml"],
+    "unencryptedFileNames": ["securethebox-service-account.json"],
     "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]
 }
 
@@ -46,7 +46,7 @@ def test_setEmailAddress():
 def test_setEnvironmentVariables():
     for var in testData["environmentVariablesList"]:
         assert kc.setEnvironmentVariable(var) == True
-        
+
 def test_setPodId():
     assert kc.setPodId(testData["dockerePodId"]) == True
 
@@ -78,31 +78,11 @@ def test_generateAuthenticationYamlFiles():
         assert kc.setEnvironmentVariable(var)
     assert kc.generateAuthenticationYamlFiles() == True
 
-def test_loadRemoteConfig():
-    kc.setCurrentDirectory()
-    assert kc.loadRemoteConfig() == True
-
-# def test_manageAuthenticationPod():
-#     kc.setCurrentDirectory()
-#     kc.setClusterName(testData["clusterName"])
-#     kc.setServiceName(testData["serviceName_authentication"])
-#     kc.setUserName(testData["userName"])
-#     kc.setKubectlAction(testData["kubectlAction_apply"])
-#     assert kc.manageAuthenticationPod() == True
-
-# def test_manageIngressPod():
-#     kc.setCurrentDirectory()
-#     kc.setClusterName(testData["clusterName"])
-#     kc.setServiceName(testData["serviceName_ingress"])
-#     kc.setKubectlAction(testData["kubectlAction_apply"])
-#     assert kc.manageIngressPod() == True
-
 def test_deleteIngressYamlFiles():
     kc.setCurrentDirectory()
     kc.setClusterName(testData["clusterName"])
     kc.setServiceName(testData["serviceName_ingress"])
     kc.setUserName(testData["userName"])
-    kc.loadRemoteConfig()
     assert kc.deleteIngressYamlFiles() == True
 
 def test_deleteServiceYamlFiles():
@@ -121,3 +101,24 @@ def test_deleteAuthenticationYamlFiles():
         assert kc.setEnvironmentVariable(var)
     assert kc.deleteAuthenticationYamlFiles() == True
 
+# def test_getKubernetesApiToken():
+#     assert kc.getKubernetesApiToken() == True
+
+# def test_loadKubernetesConfig():
+#     kc.getKubernetesApiToken()
+#     assert kc.loadKubernetesConfig() == True
+
+# def test_manageAuthenticationPod():
+#     kc.setCurrentDirectory()
+#     kc.setClusterName(testData["clusterName"])
+#     kc.setServiceName(testData["serviceName_authentication"])
+#     kc.setUserName(testData["userName"])
+#     kc.setKubectlAction(testData["kubectlAction_apply"])
+#     assert kc.manageAuthenticationPod() == True
+
+# def test_manageIngressPod():
+#     kc.setCurrentDirectory()
+#     kc.setClusterName(testData["clusterName"])
+#     kc.setServiceName(testData["serviceName_ingress"])
+#     kc.setKubectlAction(testData["kubectlAction_apply"])
+#     assert kc.manageIngressPod() == True

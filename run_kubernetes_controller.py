@@ -20,7 +20,9 @@ testData = {
     "kubectlAction_delete": "delete",
     "dockerePodId": "pod_id_123",
     "unencryptedFileNames": ["kubernetesConfig.yml"],
-    "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]
+    "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    "kubernetesDeploymentImage_ingress": "traefik:1.7",
+    "kubernetesDeploymentName_ingress": "traefik",
 }
 
 def test_setCurrentDirectory():
@@ -39,7 +41,15 @@ def manageIngressPod():
     kc.setUserName(testData["userName"])
     kc.setKubectlAction(testData["kubectlAction_apply"])
     kc.generateIngressYamlFiles()
-    kc.manageIngressPod()
+    # kc.kubernetesManageIngressPod()
+    # kc.kubernetesCreateIngress()
+    # kc.setKubernetesDeploymentImage(testData["kubernetesDeploymentImage_ingress"])
+    # kc.setKubernetesDeploymentName(testData["kubernetesDeploymentName_ingress"])
+    kc.kubernetesCreateClusterRoleBinding()
+    # kc.kubernetesCreateDeployment()
+    # kc.getKubernetesApiToken()
+    # kc.loadKubernetesConfig()
+    # kc.selectKubernetesContext()
 
 if __name__ == "__main__":
     manageIngressPod()
