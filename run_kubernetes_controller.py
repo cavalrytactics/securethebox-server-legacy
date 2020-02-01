@@ -19,11 +19,17 @@ testData = {
     "kubectlAction_apply": "apply",
     "kubectlAction_delete": "delete",
     "dockerePodId": "pod_id_123",
-    "unencryptedFileNames": ["kubernetesConfig.yml"],
+    "unencryptedFileNames": ["securethebox-service-account.json"],
     "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
-    "kubernetesDeploymentImage_ingress": "traefik:1.7",
-    "kubernetesDeploymentName_ingress": "traefik",
+    "googleProjectId": "securethebox",
+    "googleKubernetesComputeZone": "us-west1-a",
+    "googleKubernetesComputeCluster": "us-west1-a",
+    "googleKubernetesComputeRegion": "us-west1",
+    "googleServiceAccountEmail": "kubernetes-sa@securethebox.iam.gserviceaccount.com",
+    "googleServiceAccountFile": "securethebox-service-account.json",
+    "localKubernetesCluster": "docker-desktop",
 }
+
 
 def test_setCurrentDirectory():
     assert kc.setCurrentDirectory() == True
@@ -33,25 +39,38 @@ def test_setFileName():
         assert kc.setFileName(file) == True
 
 
-def manageIngressPod():
-    print("Starting ingress..")
+def createCluster():
     kc.setCurrentDirectory()
-    kc.setClusterName(testData["clusterName"])
+    kc.setFileName(testData["googleServiceAccountFile"])
+    kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+    kc.setGoogleKubernetesComputeRegion(testData["googleKubernetesComputeRegion"])
+    kc.setGoogleKubernetesComputeZone(testData["googleKubernetesComputeZone"])
+    kc.setGoogleProjectId(testData["googleProjectId"])
+    kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
+    kc.createGoogleKubernetesCluster()
+ 
+
+def deleteCluster():
+    kc.setCurrentDirectory()
+    kc.setFileName(testData["googleServiceAccountFile"])
+    kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+    kc.setGoogleKubernetesComputeRegion(testData["googleKubernetesComputeRegion"])
+    kc.setGoogleKubernetesComputeZone(testData["googleKubernetesComputeZone"])
+    kc.setGoogleProjectId(testData["googleProjectId"])
+    kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
+    kc.deleteGoogleKubernetesCluster()
+
+def selectCluster():
+    kc.setCurrentDirectory()
     kc.setServiceName(testData["serviceName_ingress"])
-    kc.setUserName(testData["userName"])
+    kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
     kc.setKubectlAction(testData["kubectlAction_apply"])
-    kc.generateIngressYamlFiles()
-    # kc.kubernetesManageIngressPod()
-    # kc.kubernetesCreateIngress()
-    # kc.setKubernetesDeploymentImage(testData["kubernetesDeploymentImage_ingress"])
-    # kc.setKubernetesDeploymentName(testData["kubernetesDeploymentName_ingress"])
-    kc.kubernetesCreateClusterRoleBinding()
-    # kc.kubernetesCreateDeployment()
-    # kc.getKubernetesApiToken()
-    # kc.loadKubernetesConfig()
-    # kc.selectKubernetesContext()
+    kc.createkubernetesManageIngressPod()
 
 if __name__ == "__main__":
-    manageIngressPod()
+    # createCluster()
+    # deleteCluster()
+    selectCluster()
+    
 
     

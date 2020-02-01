@@ -12,14 +12,16 @@ testData = {
     "emailAddress": "jidokaus@gmail.com",
     "kubectlAction_apply": "apply",
     "kubectlAction_delete": "delete",
-    "dockerePodId": "pod_id_123",
+    "kubernetesPodId": "pod_id_123",
     "unencryptedFileNames": ["securethebox-service-account.json"],
-    "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
-    "googleProjectId": "cavalrytactics",
+    "environmentVariablesList": ["APPENV","GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    "googleProjectId": "securethebox",
     "googleKubernetesComputeZone": "us-west1-a",
     "googleKubernetesComputeCluster": "test",
-    "googleServiceAccountEmail": "kubernetes-service-account@cavalrytactics.iam.gserviceaccount.com",
+    "googleKubernetesComputeRegion": "us-west1",
+    "googleServiceAccountEmail": "kubernetes-sa@securethebox.iam.gserviceaccount.com",
     "googleServiceAccountFile": "securethebox-service-account.json",
+    "localKubernetesCluster": "docker-desktop",
 }
 
 def test_setCurrentDirectory():
@@ -52,8 +54,8 @@ def test_setEnvironmentVariables():
     for var in testData["environmentVariablesList"]:
         assert kc.setEnvironmentVariable(var) == True
 
-def test_setPodId():
-    assert kc.setPodId(testData["dockerePodId"]) == True
+def test_setKubernetesPodId():
+    assert kc.setKubernetesPodId(testData["kubernetesPodId"]) == True
 
 def test_setKubectlAction():
     assert kc.setKubectlAction(testData["kubectlAction_apply"]) == True
@@ -80,8 +82,150 @@ def test_generateAuthenticationYamlFiles():
     kc.setUserName(testData["userName"])
     kc.setEmailAddress(testData["emailAddress"])
     for var in testData["environmentVariablesList"]:
-        assert kc.setEnvironmentVariable(var)
+        assert kc.setEnvironmentVariable(var) == True
     assert kc.generateAuthenticationYamlFiles() == True
+
+def test_generateStorageYamlFiles():
+    kc.setCurrentDirectory()
+    kc.setClusterName(testData["clusterName"])
+    kc.setUserName(testData["userName"])
+    assert kc.generateStorageYamlFiles() == True
+
+def test_setGoogleProjectId():
+    assert kc.setGoogleProjectId(testData["googleProjectId"]) == True
+
+def test_setGoogleKubernetesComputeZone():
+    assert kc.setGoogleKubernetesComputeZone(testData["googleKubernetesComputeZone"]) == True
+
+def test_setGoogleKubernetesComputeCluster():
+    assert kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"]) == True
+
+def test_setGoogleKubernetesComputeRegion():
+    assert kc.setGoogleKubernetesComputeRegion(testData["googleKubernetesComputeRegion"]) == True
+
+def test_setGoogleServiceAccountEmail():
+    assert kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"]) == True
+
+def test_loadGoogleKubernetesServiceAccount():
+    kc.setCurrentDirectory()
+    kc.setFileName(testData["googleServiceAccountFile"])
+    kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
+    assert kc.loadGoogleKubernetesServiceAccount() == True
+
+
+# def test_createGoogleKubernetesCluster():
+#     kc.setCurrentDirectory()
+#     kc.setFileName(testData["googleServiceAccountFile"])
+#     kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+#     kc.setGoogleKubernetesComputeRegion(testData["googleKubernetesComputeRegion"])
+#     kc.setGoogleKubernetesComputeZone(testData["googleKubernetesComputeZone"])
+#     kc.setGoogleProjectId(testData["googleProjectId"])
+#     kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
+#     assert kc.createGoogleKubernetesCluster() == True
+
+# def test_getGoogleKubernetesClusterCredentials():
+#     kc.setCurrentDirectory()
+#     kc.setFileName(testData["googleServiceAccountFile"])
+#     kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+#     kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
+#     kc.getGoogleKubernetesClusterCredentials() == True
+
+def test_selectGogoleKubernetesClusterContext():
+    if os.getenv("APPENV") == "DEV":
+        kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
+        assert kc.selectGoogleKubernetesClusterContext() == True
+    elif os.getenv("APPENV") == "PROD":
+        kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+        assert kc.selectGoogleKubernetesClusterContext() == True
+
+# def test_deleteGoogleKubernetesCluster():
+#     kc.setCurrentDirectory()
+#     kc.setFileName(testData["googleServiceAccountFile"])
+#     kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+#     kc.setGoogleKubernetesComputeRegion(testData["googleKubernetesComputeRegion"])
+#     kc.setGoogleKubernetesComputeZone(testData["googleKubernetesComputeZone"])
+#     kc.setGoogleProjectId(testData["googleProjectId"])
+#     kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
+#     assert kc.deleteGoogleKubernetesCluster() == True
+
+def test_managekubernetesIngressPod_apply():
+    kc.setCurrentDirectory()
+    kc.setServiceName(testData["serviceName_ingress"])
+    if os.getenv("APPENV") == "DEV":
+        kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
+        assert kc.selectGoogleKubernetesClusterContext() == True
+    elif os.getenv("APPENV") == "PROD":
+        kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+    kc.setKubectlAction(testData["kubectlAction_apply"])
+    assert kc.managekubernetesIngressPod() == True
+
+def test_managekubernetesIngressPod_delete():
+    kc.setCurrentDirectory()
+    kc.setServiceName(testData["serviceName_ingress"])
+    if os.getenv("APPENV") == "DEV":
+        kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
+        assert kc.selectGoogleKubernetesClusterContext() == True
+    elif os.getenv("APPENV") == "PROD":
+        kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+    kc.setKubectlAction(testData["kubectlAction_delete"])
+    assert kc.managekubernetesIngressPod() == True
+
+def test_managekubernetesStoragePod_apply():
+    kc.setCurrentDirectory()
+    kc.setUserName(testData["userName"])
+    if os.getenv("APPENV") == "DEV":
+        kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
+    elif os.getenv("APPENV") == "PROD":
+        kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+    kc.setKubectlAction(testData["kubectlAction_apply"])
+    assert kc.managekubernetesStoragePod() == True
+
+def test_managekubernetesServicePod_apply():
+    kc.setCurrentDirectory()
+    kc.setServiceName(testData["serviceName_service"])
+    kc.setUserName(testData["userName"])
+    if os.getenv("APPENV") == "DEV":
+        kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
+    elif os.getenv("APPENV") == "PROD":
+        kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+    kc.setKubectlAction(testData["kubectlAction_apply"])
+    assert kc.managekubernetesServicePod() == True
+
+def test_getKubernetesPodId():
+    kc.setUserName(testData["userName"])
+    kc.setServiceName(testData["serviceName_service"])
+    value, podId = kc.getKubernetesPodId()
+    assert value == True
+    assert podId != "0"
+
+def test_getKubernetesPodStatus():
+    kc.setUserName(testData["userName"])
+    kc.setServiceName(testData["serviceName_service"])
+    value, podId = kc.getKubernetesPodId()
+    kc.setKubernetesPodId(podId)
+    value, podStatus = kc.getkubernetesPodStatus()
+    assert value == True
+
+def test_managekubernetesServicePod_delete():
+    kc.setCurrentDirectory()
+    kc.setServiceName(testData["serviceName_service"])
+    kc.setUserName(testData["userName"])
+    if os.getenv("APPENV") == "DEV":
+        kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
+    elif os.getenv("APPENV") == "PROD":
+        kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+    kc.setKubectlAction(testData["kubectlAction_delete"])
+    assert kc.managekubernetesServicePod() == True
+
+def test_managekubernetesStoragePod_delete():
+    kc.setCurrentDirectory()
+    kc.setUserName(testData["userName"])
+    if os.getenv("APPENV") == "DEV":
+        kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
+    elif os.getenv("APPENV") == "PROD":
+        kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+    kc.setKubectlAction(testData["kubectlAction_delete"])
+    assert kc.managekubernetesStoragePod() == True
 
 def test_deleteIngressYamlFiles():
     kc.setCurrentDirectory()
@@ -105,43 +249,9 @@ def test_deleteAuthenticationYamlFiles():
     for var in testData["environmentVariablesList"]:
         assert kc.setEnvironmentVariable(var)
     assert kc.deleteAuthenticationYamlFiles() == True
-
-def test_setGoogleProjectId():
-    assert kc.setGoogleProjectId(testData["googleProjectId"]) == True
-
-def test_setGoogleKubernetesComputeZone():
-    assert kc.setGoogleKubernetesComputeZone(testData["googleKubernetesComputeZone"]) == True
-
-def test_setGoogleKubernetesComputeCluster():
-    assert kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"]) == True
-
-def test_setGoogleServiceAccountEmail():
-    assert kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"]) == True
-
-def test_loadGoogleKubernetesServiceAccount():
+    
+def test_deleteStorageYamlFiles():
     kc.setCurrentDirectory()
-    kc.setFileName(testData["googleServiceAccountFile"])
-    kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
-    assert kc.loadGoogleKubernetesServiceAccount() == True
-
-# def test_getKubernetesApiToken():
-#     assert kc.getKubernetesApiToken() == True
-
-# def test_loadKubernetesConfig():
-#     kc.getKubernetesApiToken()
-#     assert kc.loadKubernetesConfig() == True
-
-# def test_manageAuthenticationPod():
-#     kc.setCurrentDirectory()
-#     kc.setClusterName(testData["clusterName"])
-#     kc.setServiceName(testData["serviceName_authentication"])
-#     kc.setUserName(testData["userName"])
-#     kc.setKubectlAction(testData["kubectlAction_apply"])
-#     assert kc.manageAuthenticationPod() == True
-
-# def test_manageIngressPod():
-#     kc.setCurrentDirectory()
-#     kc.setClusterName(testData["clusterName"])
-#     kc.setServiceName(testData["serviceName_ingress"])
-#     kc.setKubectlAction(testData["kubectlAction_apply"])
-#     assert kc.manageIngressPod() == True
+    kc.setClusterName(testData["clusterName"])
+    kc.setUserName(testData["userName"])
+    assert kc.deleteStorageYamlFiles() == True

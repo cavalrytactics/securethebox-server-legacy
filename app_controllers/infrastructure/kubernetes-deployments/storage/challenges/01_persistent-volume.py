@@ -5,7 +5,7 @@ def writeConfig(**kwargs):
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: {clusterName}-{serviceName}-{userName}-pv
+  name: {clusterName}-{userName}-pv
   labels:
     type: local
   annotations:
@@ -20,8 +20,8 @@ spec:
     path: "/var/log/challenge{challengeId}"
               """
 
-    with open('./app_controllers/infrastructure/kubernetes-deployments/storage/challenges/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-pv.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/storage/challenges/01_persistent-volume-'+str(sys.argv[2])+'.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 if __name__ == "__main__":
-  writeConfig(clusterName=str(sys.argv[1]),serviceName=str(sys.argv[2]),userName=str(sys.argv[3],challengeId=int(),gid=int()))
+  writeConfig(clusterName=str(sys.argv[1]),userName=str(sys.argv[2]),challengeId=str(sys.argv[3]),gid=str(sys.argv[4]))
