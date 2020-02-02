@@ -44,6 +44,13 @@ class GitControl():
             self.pytest_result = False
         else:
             self.pytest_result = True
+
+    def pytestCheckSkip(self):
+        failures = subprocess.Popen([f"export APPENV=PROD && export SKIPKUBE=YES && pytest -vs -x tests/"],shell=True).wait()
+        if failures >= 1:
+            self.pytest_result = False
+        else:
+            self.pytest_result = True
     
     def lintTravisCheck(self):
         failures = subprocess.Popen([f"travis lint"],shell=True).wait()

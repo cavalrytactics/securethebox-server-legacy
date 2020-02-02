@@ -56,7 +56,7 @@ class KubernetesController():
 
             elif fileExists == True:
                 process = subprocess.Popen(
-                    [f"echo 'yes' | travis encrypt-file -f -p {self.currentDirectory}/app_controllers/secrets/{self.fileName}"], stdout=subprocess.PIPE, shell=True)
+                    [f"echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/{self.fileName}"], stdout=subprocess.PIPE, shell=True)
                 finished = True
                 keyVariableKEY = ""
                 keyVariableVALUE = ""
