@@ -74,7 +74,7 @@ class GitlabController():
     def setHttpHeaderHost(self, httpHeadersHost):
         self.httpHeadersHost = httpHeadersHost
 
-    def gitlabGetResetPasswordToken(self):
+    def getGitlabGetResetPasswordToken(self):
         url = "http://gitlab-"+self.userName+"."+self.clusterName+".securethebox.us"
         headers = {
             'Host': "gitlab-"+self.userName+"."+self.clusterName+".securethebox.us"

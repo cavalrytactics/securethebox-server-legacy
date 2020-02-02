@@ -399,9 +399,9 @@ class KubernetesController():
     def loadGoogleKubernetesServiceAccount(self):
         try:
             subprocess.Popen(
-                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName} >> /dev/null 2>&1"], shell=True).wait()
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"], shell=True).wait()
             subprocess.Popen(
-                [f"gcloud config set account {self.googleServiceAccountEmail} >> /dev/null 2>&1"], shell=True).wait()
+                [f"gcloud config set account {self.googleServiceAccountEmail}"], shell=True).wait()
             return True
         except:
             return False
@@ -422,7 +422,8 @@ class KubernetesController():
                 --disk-type \"pd-standard\" \
                 --disk-size \"30\" \
                 --scopes \"https://www.googleapis.com/auth/devstorage.read_only\",\"https://www.googleapis.com/auth/logging.write\",\"https://www.googleapis.com/auth/monitoring\",\"https://www.googleapis.com/auth/servicecontrol\",\"https://www.googleapis.com/auth/service.management.readonly\",\"https://www.googleapis.com/auth/trace.append\" \
-                --num-nodes \"3\" --enable-ip-alias \
+                --num-nodes \"3\" \
+                --enable-ip-alias \
                 --network \"projects/{self.googleProjectId}/global/networks/default\" \
                 --subnetwork \"projects/{self.googleProjectId}/regions/{self.googleKubernetesComputeRegion}/subnetworks/default\" \
                 --default-max-pods-per-node \"8\""], shell=True).wait()
