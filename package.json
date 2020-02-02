@@ -9,6 +9,7 @@
     "pip-s": "python git_scripts.py pip-save",
     "push-m": "python git_scripts.py git-push-master",
     "push-b": "python git_scripts.py git-push-branch",
+    "push-bs": "python git_scripts.py git-push-branch-skip",
     "sync-l": "python git_scripts.py git-sync-local",
     "sync-m": "python git_scripts.py git-merge-upstream",
     "compose-up": "docker-compose up",

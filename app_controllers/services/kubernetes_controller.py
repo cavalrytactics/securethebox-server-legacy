@@ -127,7 +127,10 @@ class KubernetesController():
             unencryptedFileName = f"{self.fileName}"
             fileCreated = path.exists(
                 f"{fullencryptedFilePath}{encryptedFileName}")
-            if fileCreated == True:
+            if shutil.which("travis") is None:
+                print("Travis command does not exist!")
+                return True
+            elif fileCreated == True:
                 keyVariableKEY = ""
                 keyVariableVALUE = ""
                 ivVariableKEY = ""

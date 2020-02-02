@@ -39,7 +39,7 @@ class GitControl():
         self.git_current_branch = parsedBranch
     
     def pytestCheck(self):
-        failures = subprocess.Popen([f"export APPENV=PROD && pytest -vs -x tests/"],shell=True).wait()
+        failures = subprocess.Popen([f"export APPENV=PROD && export SKIPKUBE=NO && pytest -vs -x tests/"],shell=True).wait()
         if failures >= 1:
             self.pytest_result = False
         else:
@@ -89,6 +89,18 @@ class GitControl():
         elif self.arguments[0] == "git-push-branch":
             self.lintTravisCheck()
             self.pytestCheck()
+            if self.pytest_result == True and self.lint_travis_result == True:
+                if self.git_current_branch != "master":
+                    subprocess.Popen([f"git add ."],shell=True).wait()
+                    subprocess.Popen([f"git cz && git push --set-upstream origin "+self.git_current_branch+" && cross-var \"open https://github.com/"+self.git_user+"/"+self.git_fork_name+"/compare/master..."+self.git_user+":"+self.git_current_branch+"?expand=1\""],shell=True).wait()
+                else:
+                    print("YOU ARE NOT CHECKOUT TO A BRANCH! git checkout -b \"TICKET-ID\"")
+            else:
+                print("PYTEST FAILED!")
+
+        elif self.arguments[0] == "git-push-branch-skip":
+            self.lintTravisCheck()
+            self.pytestCheckSkip()
             if self.pytest_result == True and self.lint_travis_result == True:
                 if self.git_current_branch != "master":
                     subprocess.Popen([f"git add ."],shell=True).wait()

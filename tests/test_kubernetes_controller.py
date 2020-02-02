@@ -140,9 +140,11 @@ def test_createGoogleKubernetesCluster():
     kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
     if os.getenv("APPENV") == "DEV":
         pass
-    elif os.getenv("APPENV") == "PROD":
+    elif os.getenv("APPENV") == "PROD" and os.getenv("SKIPKUBE") == "NO":
         kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
         assert kc.createGoogleKubernetesCluster() == True
+    elif os.getenv("APPENV") == "PROD" and os.getenv("SKIPKUBE") == "YES":
+        pass
 
 def test_getGoogleKubernetesClusterCredentials():
     kc.setCurrentDirectory()
@@ -150,12 +152,14 @@ def test_getGoogleKubernetesClusterCredentials():
     kc.setGoogleServiceAccountEmail(testData["googleServiceAccountEmail"])
     if os.getenv("APPENV") == "DEV":
         pass
-    elif os.getenv("APPENV") == "PROD":
+    elif os.getenv("APPENV") == "PROD" and os.getenv("SKIPKUBE") == "NO":
         kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
         assert kc.getGoogleKubernetesClusterCredentials() == True
+    elif os.getenv("APPENV") == "PROD" and os.getenv("SKIPKUBE") == "YES":
+        pass
 
 def test_selectGoogleKubernetesClusterContext():
-    time.sleep(30)
+    time.sleep(10)
     for var in testData["environmentVariablesList"]:
         kc.setEnvironmentVariable(var)
     kc.setGoogleProjectId(testData["googleProjectId"])
@@ -163,9 +167,12 @@ def test_selectGoogleKubernetesClusterContext():
     if os.getenv("APPENV") == "DEV":
         kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
         assert kc.selectGoogleKubernetesClusterContext() == True
-    elif os.getenv("APPENV") == "PROD":
+    elif os.getenv("APPENV") == "PROD" and os.getenv("SKIPKUBE") == "NO":
         kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
-        assert kc.selectGoogleKubernetesClusterContext() == True
+        assert kc.getGoogleKubernetesClusterCredentials() == True
+    elif os.getenv("APPENV") == "PROD" and os.getenv("SKIPKUBE") == "YES":
+        pass
+
 
 def test_manageKubernetesIngressPod_apply():
     for var in testData["environmentVariablesList"]:
