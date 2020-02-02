@@ -39,7 +39,7 @@ class GitControl():
         self.git_current_branch = parsedBranch
     
     def pytestCheck(self):
-        failures = subprocess.Popen([f"pytest -vs -x tests/"],shell=True).wait()
+        failures = subprocess.Popen([f"export APPENV=PROD && pytest -vs -x tests/"],shell=True).wait()
         if failures >= 1:
             self.pytest_result = False
         else:
@@ -125,6 +125,20 @@ class GitControl():
 
         elif self.arguments[0] == "pytest-all":
             failures = subprocess.Popen([f"pytest -vs -x tests/"],shell=True).wait()
+            if failures >= 1:
+                return False
+            else:
+                return True
+        
+        elif self.arguments[0] == "pytest-dev":
+            failures = subprocess.Popen([f"export APPENV=DEV && pytest -vs -x tests/"],shell=True).wait()
+            if failures >= 1:
+                return False
+            else:
+                return True
+        
+        elif self.arguments[0] == "pytest-prod":
+            failures = subprocess.Popen([f"export APPENV=PROD && pytest -vs -x tests/"],shell=True).wait()
             if failures >= 1:
                 return False
             else:

@@ -13,7 +13,7 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: cchong.vise@gmail.com
+  name: {emailAddress}
               """
 
     with open('./app_controllers/infrastructure/kubernetes-deployments/ingress/'+str(sys.argv[2])+'/01_permissions-'+str(sys.argv[1])+'-'+str(sys.argv[2])+'.yml', 'w') as yfile:
@@ -21,4 +21,4 @@ subjects:
 
 
 if __name__ == "__main__":
-  writeConfig(clusterName=str(sys.argv[1]), serviceName=str(sys.argv[2]))
+  writeConfig(clusterName=str(sys.argv[1]), serviceName=str(sys.argv[2]), emailAddress=str(sys.argv[3]))

@@ -10,7 +10,6 @@ import shutil
 kc = KubernetesController()
 
 testData = {
-    "clusterName": "us-west1-a",
     "serviceName_ingress": "traefik",
     "serviceName_service": "jenkins",
     "serviceName_authentication": "auth",
@@ -18,12 +17,12 @@ testData = {
     "emailAddress": "jidokaus@gmail.com",
     "kubectlAction_apply": "apply",
     "kubectlAction_delete": "delete",
-    "dockerePodId": "pod_id_123",
+    "kubernetesPodId": "pod_id_123",
     "unencryptedFileNames": ["securethebox-service-account.json"],
-    "environmentVariablesList": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    "environmentVariablesList": ["APPENV","GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
     "googleProjectId": "securethebox",
     "googleKubernetesComputeZone": "us-west1-a",
-    "googleKubernetesComputeCluster": "us-west1-a",
+    "googleKubernetesComputeCluster": "test",
     "googleKubernetesComputeRegion": "us-west1",
     "googleServiceAccountEmail": "kubernetes-sa@securethebox.iam.gserviceaccount.com",
     "googleServiceAccountFile": "securethebox-service-account.json",
@@ -67,10 +66,34 @@ def selectCluster():
     kc.setKubectlAction(testData["kubectlAction_apply"])
     kc.createkubernetesManageIngressPod()
 
+
+def test():
+    for var in testData["environmentVariablesList"]:
+        kc.setEnvironmentVariable(var)
+    kc.setGoogleProjectId(testData["googleProjectId"])
+    kc.setGoogleKubernetesComputeZone(testData["googleKubernetesComputeZone"])
+    if os.getenv("APPENV") == "DEV":
+        kc.setGoogleKubernetesComputeCluster(testData["localKubernetesCluster"])
+        assert kc.selectGoogleKubernetesClusterContext() == True
+    elif os.getenv("APPENV") == "PROD":
+        kc.setGoogleKubernetesComputeCluster(testData["googleKubernetesComputeCluster"])
+        assert kc.selectGoogleKubernetesClusterContext() == True
+
+def t():
+    kc.setUserName(testData["userName"])
+    kc.setServiceName(testData["serviceName_service"])
+    value, podId = kc.getKubernetesPodId()
+    kc.setKubernetesPodId(podId)
+    value, podStatus = kc.getkubernetesPodStatus()
+    print(value,podStatus)
+
+
+        
 if __name__ == "__main__":
     # createCluster()
     # deleteCluster()
-    selectCluster()
+    # selectCluster()
+    t()
     
 
     

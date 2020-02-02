@@ -1,25 +1,18 @@
 import subprocess
 import json
-import os 
+import os
 import subprocess
 from subprocess import check_output
-import time
 from os import path
-from os import environ
 import yaml
-from kubernetes import client, config, utils
-from kubernetes.client import configuration
-from kubernetes.client.rest import ApiException
+from kubernetes import client, config
 import re
 import shutil
-import requests
-from google.cloud import container_v1
 
 class KubernetesController():
     def __init__(self):
         self.podId = ""
         self.currentDirectory = ""
-        self.clusterName = ""
         self.serviceName = ""
         self.userName = ""
         self.emailAddress = ""
@@ -46,21 +39,24 @@ class KubernetesController():
             return True
         except:
             return False
-            
+
     def setTravisEncryptFile(self):
         try:
             fullUncryptedFilePath = f"{self.currentDirectory}/app_controllers/secrets/"
             unencryptedFileName = self.fileName
             encryptedFileName = f"{unencryptedFileName}.enc"
-            fileExists = path.exists(f"{fullUncryptedFilePath}{unencryptedFileName}")
-            encryptedFileExists = path.exists(f"{fullUncryptedFilePath}{encryptedFileName}")
+            fileExists = path.exists(
+                f"{fullUncryptedFilePath}{unencryptedFileName}")
+            encryptedFileExists = path.exists(
+                f"{fullUncryptedFilePath}{encryptedFileName}")
 
             if shutil.which("travis") is None:
                 print("Travis command does not exist!")
                 return True
 
             if fileExists == True:
-                process = subprocess.Popen([f"echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/{self.fileName}"],stdout=subprocess.PIPE, shell=True)
+                process = subprocess.Popen(
+                    [f"echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/{self.fileName}"], stdout=subprocess.PIPE, shell=True)
                 finished = True
                 keyVariableKEY = ""
                 keyVariableVALUE = ""
@@ -76,38 +72,49 @@ class KubernetesController():
                     if "openssl" in output.strip().decode("utf-8"):
                         decryptCommand = str(output.strip().decode("utf-8"))
                         dep = ""
-                        with open("./.travis.yml","r") as f:
+                        with open("./.travis.yml", "r") as f:
                             dep = yaml.safe_load(f)
-                            finalDecryptCommand = decryptCommand.replace(f"./app_controllers/secrets/{self.fileName} -d", f"{self.fileName} -d ; cd ../../")
+                            finalDecryptCommand = decryptCommand.replace(
+                                f"./app_controllers/secrets/{self.fileName} -d", f"{self.fileName} -d ; cd ../../")
                             if finalDecryptCommand not in dep["jobs"]["include"][0]["before_install"]:
-                                dep["jobs"]["include"][0]["before_install"].append(finalDecryptCommand)
-                        with open("./.travis.yml","w") as f:
+                                dep["jobs"]["include"][0]["before_install"].append(
+                                    finalDecryptCommand)
+                        with open("./.travis.yml", "w") as f:
                             yaml.dump(dep, f)
-                        os.rename(f"{self.currentDirectory}/{encryptedFileName}",f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
-                        keyEnvironmentVariableMatch = re.finditer("(([$]encrypted.)(.*[_]key))", str(decryptCommand), re.MULTILINE)
-                        ivEnvironmentVariableMatch1 = re.finditer("([-]iv.)([$]encrypted.)(.*[_]iv)", str(decryptCommand), re.MULTILINE)
+                        os.rename(f"{self.currentDirectory}/{encryptedFileName}",
+                                  f"{self.currentDirectory}/app_controllers/secrets/{encryptedFileName}")
+                        keyEnvironmentVariableMatch = re.finditer(
+                            "(([$]encrypted.)(.*[_]key))", str(decryptCommand), re.MULTILINE)
+                        ivEnvironmentVariableMatch1 = re.finditer(
+                            "([-]iv.)([$]encrypted.)(.*[_]iv)", str(decryptCommand), re.MULTILINE)
                         for matchNum, match in enumerate(keyEnvironmentVariableMatch, start=1):
                             keyEnvironmentVariable = str(match.group())
                         for matchNum, match in enumerate(ivEnvironmentVariableMatch1, start=1):
                             ivEnvironmentVariable = str(match.group())
-                        ivEnvironmentVariableMatch2 = re.finditer("([$]encrypted.)(.*[_]iv)", str(ivEnvironmentVariable), re.MULTILINE)
+                        ivEnvironmentVariableMatch2 = re.finditer(
+                            "([$]encrypted.)(.*[_]iv)", str(ivEnvironmentVariable), re.MULTILINE)
                         for matchNum, match in enumerate(ivEnvironmentVariableMatch2, start=1):
                             ivEnvironmentVariable = str(match.group())
                         setattr(self, keyEnvironmentVariable, "")
                         keyVariableKEY = keyEnvironmentVariable
                         setattr(self, ivEnvironmentVariable, "")
                         ivVariableKEY = ivEnvironmentVariable
-                    
+
                     if "key:" in output.strip().decode("utf-8"):
-                        setattr(self, keyVariableKEY, output.strip().decode("utf-8"))
-                        self.encryptedEnvironmentVariables[keyVariableKEY] = output.strip().decode("utf-8").replace("key:","").strip()
-                        
+                        setattr(self, keyVariableKEY,
+                                output.strip().decode("utf-8"))
+                        self.encryptedEnvironmentVariables[keyVariableKEY] = output.strip().decode(
+                            "utf-8").replace("key:", "").strip()
+
                     if "iv:" in output.strip().decode("utf-8"):
-                        setattr(self, ivVariableKEY, output.strip().decode("utf-8"))
-                        self.encryptedEnvironmentVariables[ivVariableKEY] = output.strip().decode("utf-8").replace("iv:","").strip()
+                        setattr(self, ivVariableKEY,
+                                output.strip().decode("utf-8"))
+                        self.encryptedEnvironmentVariables[ivVariableKEY] = output.strip().decode(
+                            "utf-8").replace("iv:", "").strip()
                         return True
             else:
-                print("Unencrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
+                print("Unencrypted File does not EXIST!",
+                      f"{fullUncryptedFilePath}{unencryptedFileName}")
             return True
         except:
             print("You may need to login to Travis")
@@ -118,7 +125,8 @@ class KubernetesController():
             fullencryptedFilePath = f"{self.currentDirectory}/app_controllers/secrets/"
             encryptedFileName = f"{self.fileName}.enc"
             unencryptedFileName = f"{self.fileName}"
-            fileCreated = path.exists(f"{fullencryptedFilePath}{encryptedFileName}")
+            fileCreated = path.exists(
+                f"{fullencryptedFilePath}{encryptedFileName}")
             if fileCreated == True:
                 keyVariableKEY = ""
                 keyVariableVALUE = ""
@@ -132,11 +140,13 @@ class KubernetesController():
                         ivVariableKEY = variable
                         ivVariableVALUE = self.encryptedEnvironmentVariables[variable]
                 os.chdir(fullencryptedFilePath)
-                subprocess.Popen([f"openssl aes-256-cbc -K {keyVariableVALUE} -iv {ivVariableVALUE} -in {encryptedFileName} -out {unencryptedFileName} -d"],shell=True).wait()
+                subprocess.Popen(
+                    [f"openssl aes-256-cbc -K {keyVariableVALUE} -iv {ivVariableVALUE} -in {encryptedFileName} -out {unencryptedFileName} -d"], shell=True).wait()
                 os.chdir(self.currentDirectory)
                 return True
             else:
-                print("Encrypted File does not EXIST!",f"{fullUncryptedFilePath}{unencryptedFileName}")
+                print("Encrypted File does not EXIST!",
+                      f"{fullUncryptedFilePath}{unencryptedFileName}")
             return True
         except:
             print("You may need to login to Travis")
@@ -148,14 +158,14 @@ class KubernetesController():
             return True
         except:
             return False
-    
+
     def setClusterName(self, clusterName):
         try:
-            self.clusterName = clusterName
+            self.googleKubernetesComputeCluster = clusterName
             return True
         except:
             return False
-    
+
     def setServiceName(self, serviceName):
         try:
             self.serviceName = serviceName
@@ -180,7 +190,8 @@ class KubernetesController():
     def setEnvironmentVariable(self, environmentVariable):
         try:
             if os.getenv(environmentVariable) is not None:
-                setattr(self, environmentVariable, os.getenv(environmentVariable))
+                setattr(self, environmentVariable,
+                        os.getenv(environmentVariable))
             else:
                 print(f"{environmentVariable} is not set")
                 return False
@@ -200,7 +211,7 @@ class KubernetesController():
             return True
         except:
             return False
-    
+
     def setKubectlAction(self, kubectlAction):
         try:
             self.kubectlAction = kubectlAction
@@ -210,12 +221,15 @@ class KubernetesController():
 
     def generateIngressYamlFiles(self):
         try:
-            fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
+            fileList = ["01_permissions", "02_cluster-role",
+                        "03_config", "04_deployment", "05_service", "06_ingress"]
             currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
-                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName}"],shell=True).wait()
-                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                subprocess.Popen(
+                    [f"python3.7 {fullFilePath}.py {self.googleKubernetesComputeCluster} {self.serviceName} {self.emailAddress}"], shell=True).wait()
+                fileCreated = path.exists(
+                    f"{fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml")
                 if fileCreated == False:
                     return False
             return True
@@ -228,8 +242,10 @@ class KubernetesController():
             currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
-                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName}"],shell=True).wait()
-                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                subprocess.Popen(
+                    [f"python3.7 {fullFilePath}.py {self.googleKubernetesComputeCluster} {self.serviceName} {self.userName}"], shell=True).wait()
+                fileCreated = path.exists(
+                    f"{fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml")
                 if fileCreated == False:
                     return False
             return True
@@ -242,8 +258,10 @@ class KubernetesController():
             currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/authentication/{self.serviceName}/{file}"
-                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.serviceName} {self.userName} {self.emailAddress} {self.GOOGLE_CLIENT_ID} {self.GOOGLE_CLIENT_SECRET}"],shell=True).wait()
-                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                subprocess.Popen(
+                    [f"python3.7 {fullFilePath}.py {self.googleKubernetesComputeCluster} {self.serviceName} {self.userName} {self.emailAddress} {self.GOOGLE_CLIENT_ID} {self.GOOGLE_CLIENT_SECRET}"], shell=True).wait()
+                fileCreated = path.exists(
+                    f"{fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml")
                 if fileCreated == False:
                     return False
             return True
@@ -256,8 +274,10 @@ class KubernetesController():
             currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/{file}"
-                subprocess.Popen([f"python3.7 {fullFilePath}.py {self.clusterName} {self.userName} {self.challengeId} {self.challengeGroupId}"],shell=True).wait()
-                fileCreated = path.exists(f"{fullFilePath}-{self.userName}.yml")
+                subprocess.Popen(
+                    [f"python3.7 {fullFilePath}.py {self.googleKubernetesComputeCluster} {self.userName} {self.challengeId} {self.challengeGroupId}"], shell=True).wait()
+                fileCreated = path.exists(
+                    f"{fullFilePath}-{self.userName}.yml")
                 if fileCreated == False:
                     return False
             return True
@@ -266,17 +286,20 @@ class KubernetesController():
 
     def deleteIngressYamlFiles(self):
         try:
-            fileList = ["01_permissions", "02_cluster-role", "03_config", "04_deployment", "05_service", "06_ingress"]
+            fileList = ["01_permissions", "02_cluster-role",
+                        "03_config", "04_deployment", "05_service", "06_ingress"]
             currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
                 try:
-                    subprocess.Popen([f"rm -rf {fullFilePath}-{self.clusterName}-{self.serviceName}.yml"],shell=True).wait()
+                    subprocess.Popen(
+                        [f"rm -rf {fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml"], shell=True).wait()
                 except:
                     continue
-                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}.yml")
+                fileCreated = path.exists(
+                    f"{fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml")
                 if fileCreated == True:
-                    return False 
+                    return False
             return True
         except:
             return False
@@ -288,12 +311,14 @@ class KubernetesController():
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
                 try:
-                    subprocess.Popen([f"rm -rf {fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml"],shell=True).wait()
+                    subprocess.Popen(
+                        [f"rm -rf {fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml"], shell=True).wait()
                 except:
                     continue
-                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                fileCreated = path.exists(
+                    f"{fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml")
                 if fileCreated == True:
-                    return False 
+                    return False
             return True
         except:
             return False
@@ -303,14 +328,16 @@ class KubernetesController():
             fileList = ["01_deployment", "02_service", "03_ingress"]
             currentDirectory = self.currentDirectory
             for file in fileList:
-                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
+                fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/authentication/{self.serviceName}/{file}"
                 try:
-                    subprocess.Popen([f"rm -rf {fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml"],shell=True).wait()
+                    subprocess.Popen(
+                        [f"rm -rf {fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml"], shell=True).wait()
                 except:
                     continue
-                fileCreated = path.exists(f"{fullFilePath}-{self.clusterName}-{self.serviceName}-{self.userName}.yml")
+                fileCreated = path.exists(
+                    f"{fullFilePath}-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml")
                 if fileCreated == True:
-                    return False 
+                    return False
             return True
         except:
             return False
@@ -322,12 +349,14 @@ class KubernetesController():
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/{file}"
                 try:
-                    subprocess.Popen([f"rm -rf {fullFilePath}-{self.userName}.yml"],shell=True).wait()
+                    subprocess.Popen(
+                        [f"rm -rf {fullFilePath}-{self.userName}.yml"], shell=True).wait()
                 except:
                     continue
-                fileCreated = path.exists(f"{fullFilePath}-{self.userName}.yml")
+                fileCreated = path.exists(
+                    f"{fullFilePath}-{self.userName}.yml")
                 if fileCreated == True:
-                    return False 
+                    return False
             return True
         except:
             return False
@@ -338,7 +367,7 @@ class KubernetesController():
             return True
         except:
             return False
-    
+
     def setGoogleKubernetesComputeZone(self, googleKubernetesComputeZone):
         try:
             self.googleKubernetesComputeZone = googleKubernetesComputeZone
@@ -369,27 +398,31 @@ class KubernetesController():
 
     def loadGoogleKubernetesServiceAccount(self):
         try:
-            subprocess.Popen([f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName} >> /dev/null 2>&1"],shell=True).wait()
-            subprocess.Popen([f"gcloud config set account {self.googleServiceAccountEmail} >> /dev/null 2>&1"],shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName} >> /dev/null 2>&1"], shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud config set account {self.googleServiceAccountEmail} >> /dev/null 2>&1"], shell=True).wait()
             return True
         except:
             return False
 
     def createGoogleKubernetesCluster(self):
         try:
-            subprocess.Popen([f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"],shell=True).wait()
-            subprocess.Popen([f"gcloud config set account {self.googleServiceAccountEmail}"],shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"], shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud config set account {self.googleServiceAccountEmail}"], shell=True).wait()
             subprocess.Popen([f"gcloud container \
                 --project \"{self.googleProjectId}\" clusters create \"{self.googleKubernetesComputeCluster}\" \
                 --zone \"{self.googleKubernetesComputeZone}\" \
                 --no-enable-basic-auth \
                 --cluster-version \"1.14.8-gke.33\" \
-                --machine-type \"g1-small\" \
+                --machine-type \"n1-standard-1\" \
                 --image-type \"COS\" \
                 --disk-type \"pd-standard\" \
                 --disk-size \"30\" \
                 --scopes \"https://www.googleapis.com/auth/devstorage.read_only\",\"https://www.googleapis.com/auth/logging.write\",\"https://www.googleapis.com/auth/monitoring\",\"https://www.googleapis.com/auth/servicecontrol\",\"https://www.googleapis.com/auth/service.management.readonly\",\"https://www.googleapis.com/auth/trace.append\" \
-                --num-nodes \"1\" --enable-ip-alias \
+                --num-nodes \"3\" --enable-ip-alias \
                 --network \"projects/{self.googleProjectId}/global/networks/default\" \
                 --subnetwork \"projects/{self.googleProjectId}/regions/{self.googleKubernetesComputeRegion}/subnetworks/default\" \
                 --default-max-pods-per-node \"8\""], shell=True).wait()
@@ -399,18 +432,24 @@ class KubernetesController():
 
     def getGoogleKubernetesClusterCredentials(self):
         try:
-            subprocess.Popen([f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"],shell=True).wait()
-            subprocess.Popen([f"gcloud config set account {self.googleServiceAccountEmail}"],shell=True).wait()
-            subprocess.Popen([f"gcloud container clusters get-credentials {self.googleKubernetesComputeCluster}"],shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"], shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud config set account {self.googleServiceAccountEmail}"], shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud container clusters get-credentials {self.googleKubernetesComputeCluster}"], shell=True).wait()
             return True
         except:
             return False
 
     def deleteGoogleKubernetesCluster(self):
         try:
-            subprocess.Popen([f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"],shell=True).wait()
-            subprocess.Popen([f"gcloud config set account {self.googleServiceAccountEmail}"],shell=True).wait()
-            subprocess.Popen([f"echo \"y\" | gcloud container clusters delete {self.googleKubernetesComputeCluster}"], stdout=subprocess.PIPE, shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"], shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud config set account {self.googleServiceAccountEmail}"], shell=True).wait()
+            subprocess.Popen(
+                [f"echo \"y\" | gcloud container clusters delete {self.googleKubernetesComputeCluster}"], stdout=subprocess.PIPE, shell=True).wait()
             return True
         except:
             return False
@@ -422,62 +461,80 @@ class KubernetesController():
                 print("Cannot find any context in kube-config file.")
                 return False
             else:
-                config.load_kube_config(context=self.googleKubernetesComputeCluster)
-                return True
+                if os.getenv("APPENV") == "PROD":
+                    context = f"gke_{self.googleProjectId}_{self.googleKubernetesComputeZone}_{self.googleKubernetesComputeCluster}"
+                    config.load_kube_config(context=context)
+                    subprocess.Popen([f"kubectl config use-context {context}"], stdout=subprocess.PIPE, shell=True).wait()
+                    return True
+                elif os.getenv("APPENV") == "DEV":
+                    config.load_kube_config(context="docker-desktop")
+                    subprocess.Popen([f"kubectl config use-context docker-desktop"], stdout=subprocess.PIPE, shell=True).wait()
+                    return True
         except:
             return False
 
-    def managekubernetesIngressPod(self):
+    def manageKubernetesIngressPod(self):
         try:
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/01_permissions-{self.clusterName}-{self.serviceName}.yml >> /dev/null 2>&1"],shell=True).wait()
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/02_cluster-role-{self.clusterName}-{self.serviceName}.yml >> /dev/null 2>&1"],shell=True).wait()
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/03_config-{self.clusterName}-{self.serviceName}.yml >> /dev/null 2>&1"],shell=True).wait()
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/04_deployment-{self.clusterName}-{self.serviceName}.yml >> /dev/null 2>&1"],shell=True).wait()
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/05_service-{self.clusterName}-{self.serviceName}.yml >> /dev/null 2>&1"],shell=True).wait()
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/06_ingress-{self.clusterName}-{self.serviceName}.yml >> /dev/null 2>&1"],shell=True).wait()
+            subprocess.Popen(
+                [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/01_permissions-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml"], shell=True).wait()
+            subprocess.Popen(
+                [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/02_cluster-role-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml"], shell=True).wait()
+            subprocess.Popen(
+                [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/03_config-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml"], shell=True).wait()
+            subprocess.Popen(
+                [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/04_deployment-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml"], shell=True).wait()
+            subprocess.Popen(
+                [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/05_service-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml"], shell=True).wait()
+            subprocess.Popen(
+                [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/06_ingress-{self.googleKubernetesComputeCluster}-{self.serviceName}.yml"], shell=True).wait()
             return True
         except:
             return False
 
-    def managekubernetesStoragePod(self):
+    def manageKubernetesStoragePod(self):
         try:
             if self.kubectlAction == "apply":
-                subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/01_persistent-volume-{self.userName}.yml >> /dev/null 2>&1"],shell=True).wait()
-                subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/02_persistent-volume-claim-{self.userName}.yml >> /dev/null 2>&1"],shell=True).wait()
+                subprocess.Popen(
+                    [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/01_persistent-volume-{self.userName}.yml >> /dev/null 2>&1"], shell=True).wait()
+                subprocess.Popen(
+                    [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/02_persistent-volume-claim-{self.userName}.yml >> /dev/null 2>&1"], shell=True).wait()
                 return True
             elif self.kubectlAction == "delete":
-                subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/02_persistent-volume-claim-{self.userName}.yml >> /dev/null 2>&1"],shell=True).wait()
-                subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/01_persistent-volume-{self.userName}.yml >> /dev/null 2>&1"],shell=True).wait()
+                subprocess.Popen(
+                    [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/02_persistent-volume-claim-{self.userName}.yml >> /dev/null 2>&1"], shell=True).wait()
+                subprocess.Popen(
+                    [f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/01_persistent-volume-{self.userName}.yml >> /dev/null 2>&1"], shell=True).wait()
                 return True
         except:
             return False
 
     def managekubernetesServicePod(self):
         try:
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/01_deployment-{self.clusterName}-{self.serviceName}-{self.userName}.yml >> /dev/null 2>&1"],shell=True).wait()
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/02_service-{self.clusterName}-{self.serviceName}-{self.userName}.yml >> /dev/null 2>&1"],shell=True).wait()
-            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/03_ingress-{self.clusterName}-{self.serviceName}-{self.userName}.yml >> /dev/null 2>&1"],shell=True).wait()
+            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/01_deployment-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml >> /dev/null 2>&1"], shell=True).wait()
+            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/02_service-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml >> /dev/null 2>&1"], shell=True).wait()
+            subprocess.Popen([f"kubectl {self.kubectlAction} -f {self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/03_ingress-{self.googleKubernetesComputeCluster}-{self.serviceName}-{self.userName}.yml >> /dev/null 2>&1"], shell=True).wait()
             return True
         except:
             return False
-    
+
     def getKubernetesPodId(self):
-        command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
+        command = ["kubectl", "get", "pods", "-o", "go-template", "--template",
+                   "'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
         out = check_output(command)
-        pod_list = out.decode("utf-8").replace('\'','').splitlines()
+        pod_list = out.decode("utf-8").replace('\'', '').splitlines()
         pod_id = ''
         findPod = True
         while findPod:
             for i in pod_list:
                 if f'{self.serviceName}' in str(i) and f'{self.userName}' in str(i):
                     pod_id = str(i)
-                    findPod=False
+                    findPod = False
                     self.kubernetesPodId = pod_id
                     return True, str(pod_id)
             return False, "0"
 
     def getkubernetesPodStatus(self):
-        command = ["kubectl","get","pod",self.kubernetesPodId,"-o","json"]
+        command = ["kubectl", "get", "pod", self.kubernetesPodId, "-o", "json"]
         command_output = check_output(command)
         parsedJSON = json.loads(command_output)
         currentState = parsedJSON["status"]["containerStatuses"][0]["state"]
@@ -485,18 +542,17 @@ class KubernetesController():
             if i == "running":
                 return True, i
             else:
-                print("STATUS:",i)
                 return True, i
         return False, "unknown"
 
 
 """ ############################################################################################################################## """
 
-
-def kubernetesGeneratePodsYaml(clusterName,serviceName,userName):
-    print("Generating Pod Yaml",clusterName,serviceName,userName)
-    subprocess.Popen([f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"],shell=True).wait()
+def kubernetesGeneratePodsYaml(clusterName, serviceName, userName):
+    print("Generating Pod Yaml", clusterName, serviceName, userName)
+    subprocess.Popen(
+        [f"python3.7 ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"], shell=True).wait()
 
 def kubernetesManagePods(clusterName, serviceName, userName, action):
-    subprocess.Popen([f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
-
+    subprocess.Popen(
+        [f"kubectl {action} -f ./app_controllers/infrastructure/kubernetes-deployments/pods/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"], shell=True).wait()
