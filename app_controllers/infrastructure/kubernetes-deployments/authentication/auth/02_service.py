@@ -6,6 +6,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: auth
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: {serviceName}.{clusterName}.securethebox.us
 spec:
   selector:
     app: auth

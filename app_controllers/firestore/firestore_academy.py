@@ -26,7 +26,6 @@ class FirestoreAcademy():
         for doc in docs:
             courses.append(doc.to_dict())
         self.courses = courses
-        print(self.courses)
         return self.courses
 
     def addCourse(self, course_payload):

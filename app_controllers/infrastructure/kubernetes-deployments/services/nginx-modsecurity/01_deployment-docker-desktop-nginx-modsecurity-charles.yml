@@ -1,0 +1,34 @@
+
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nginx-modsecurity-charles
+  labels:
+    app: nginx-modsecurity-charles
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-modsecurity-charles
+  template:
+    metadata:
+      labels:
+        app: nginx-modsecurity-charles
+    spec:
+      volumes:
+        - name: docker-desktop-charles-pv
+          persistentVolumeClaim:
+            claimName: docker-desktop-charles-pvc
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+      containers:
+      - name: nginx-modsecurity-charles
+        image: "really/nginx-modsecurity:latest"
+        ports:
+          - containerPort: 80
+          - containerPort: 9000
+        volumeMounts:
+          - name: dockersock
+            mountPath: "/var/run/docker.sock"
+              

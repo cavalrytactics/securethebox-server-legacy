@@ -31,9 +31,7 @@ class ChallengeCreate(Resource):
     @api.expect(resource_fields)
     def post(self):
         args = apps_parser.parse_args()
-        print(args['challenge'])
         fa.addCourse(args['challenge'])
-        # addCourse()
         try:
             return args['challenge'], 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
         except:

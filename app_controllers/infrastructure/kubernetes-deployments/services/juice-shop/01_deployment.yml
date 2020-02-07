@@ -25,5 +25,5 @@ spec:
         - containerPort: 3000
         - containerPort: 9000
         volumeMounts:
-        - mountPath: "/var/log/challenge1"
+        - mountPath: "/var/log/challenge0000"
           name: task-pv-storage

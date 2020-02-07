@@ -29,7 +29,7 @@ spec:
           servicePort: cloudcmd
               """
 
-    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/03_ingress'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/03_ingress-'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 # usage:

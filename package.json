@@ -20,7 +20,10 @@
     "images-a": "python git_scripts.py docker-images-delete-all",
     "pytest": "python git_scripts.py pytest-all",
     "pytest-dev": "python git_scripts.py pytest-dev",
+    "pytest-dev-skip": "python git_scripts.py pytest-dev-skip",
     "pytest-prod": "python git_scripts.py pytest-prod",
+    "pytest-prod-skip": "python git_scripts.py pytest-prod-skip",
+    "pytest-staging": "python git_scripts.py pytest-staging",
     "lint": "python git_scripts.py lint-travis",
     "kill": "sudo lsof -t -i tcp:5000  | xargs kill"
   },

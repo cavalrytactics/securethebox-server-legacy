@@ -28,7 +28,7 @@ jobs:
     python: 3.7
     script:
     - pwd
-    - pytest -vs -x tests/
+    - pytest -vs -x tests/challenges_kubernetes_manager.py
     services:
     - docker
 language: python
