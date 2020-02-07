@@ -19,9 +19,9 @@ spec:
         app: {serviceName}-{userName}
     spec:
       volumes:
-        - name: task-pv-storage
+        - name: {clusterName}-{userName}-pv
           persistentVolumeClaim:
-            claimName: task-pv-claim
+            claimName: {clusterName}-{userName}-pvc
       containers:
       - name: {serviceName}-{userName}
         image: splunk/splunk:latest
@@ -35,11 +35,11 @@ spec:
           - name: SPLUNK_PASSWORD
             value: Changeme
         volumeMounts:
-        - mountPath: "/var/log/challenge1"
-          name: task-pv-storage
+        - mountPath: "/var/log/challenge0000"
+          name: {clusterName}-{userName}-pv
               """
 
-    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/01_deployment-'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

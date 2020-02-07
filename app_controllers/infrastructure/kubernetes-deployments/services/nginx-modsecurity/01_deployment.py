@@ -19,21 +19,24 @@ spec:
         app: {serviceName}-{userName}
     spec:
       volumes:
-        - name: task-pv-storage
+        - name: {clusterName}-{userName}-pv
           persistentVolumeClaim:
-            claimName: task-pv-claim
+            claimName: {clusterName}-{userName}-pvc
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
       containers:
       - name: {serviceName}-{userName}
         image: "really/nginx-modsecurity:latest"
         ports:
-        - containerPort: 80
-        - containerPort: 9000
+          - containerPort: 80
+          - containerPort: 9000
         volumeMounts:
-          - mountPath: "/var/log/challenge1"
-            name: task-pv-storage
+          - name: dockersock
+            mountPath: "/var/run/docker.sock"
               """
 
-    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/01_deployment-'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

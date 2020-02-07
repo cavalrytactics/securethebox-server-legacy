@@ -1,0 +1,15 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: auth.docker-desktop.securethebox.us
+spec:
+  selector:
+    app: auth
+  ports:
+  - name: http
+    targetPort: 4181
+    port: 80
+              

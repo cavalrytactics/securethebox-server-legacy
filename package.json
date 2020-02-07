@@ -9,6 +9,7 @@
     "pip-s": "python git_scripts.py pip-save",
     "push-m": "python git_scripts.py git-push-master",
     "push-b": "python git_scripts.py git-push-branch",
+    "push-bs": "python git_scripts.py git-push-branch-skip",
     "sync-l": "python git_scripts.py git-sync-local",
     "sync-m": "python git_scripts.py git-merge-upstream",
     "compose-up": "docker-compose up",
@@ -17,6 +18,13 @@
     "docker-r": "python git_scripts.py docker-run",
     "docker-k": "python git_scripts.py docker-kill-all",
     "images-a": "python git_scripts.py docker-images-delete-all",
+    "pytest": "python git_scripts.py pytest-all",
+    "pytest-dev": "python git_scripts.py pytest-dev",
+    "pytest-dev-skip": "python git_scripts.py pytest-dev-skip",
+    "pytest-prod": "python git_scripts.py pytest-prod",
+    "pytest-prod-skip": "python git_scripts.py pytest-prod-skip",
+    "pytest-staging": "python git_scripts.py pytest-staging",
+    "lint": "python git_scripts.py lint-travis",
     "kill": "sudo lsof -t -i tcp:5000  | xargs kill"
   },
   "repository": {

@@ -1,0 +1,35 @@
+
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: securethebox-server-charles
+  labels:
+    app: securethebox-server-charles
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: securethebox-server-charles
+  template:
+    metadata:
+      labels:
+        app: securethebox-server-charles
+    spec:
+      volumes:
+        - name: docker-desktop-charles-pv
+          persistentVolumeClaim:
+            claimName: docker-desktop-charles-pvc
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+      containers:
+      - name: securethebox-server-charles
+        image: cavalrytactics/securethebox-server:latest
+        ports:
+          - containerPort: 5000
+        volumeMounts:
+          - name: dockersock
+            mountPath: "/var/run/docker.sock"
+          - name: docker-desktop-charles-pv
+            mountPath: "/var/log/challenge0000"
+              

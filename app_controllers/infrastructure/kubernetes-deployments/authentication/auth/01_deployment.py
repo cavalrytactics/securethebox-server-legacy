@@ -31,9 +31,9 @@ spec:
           - name: INSECURE_COOKIE
             value: "true"
           - name: COOKIE_DOMAINS
-            value: "securethebox.us,us-west1-a.securethebox.us,jenkins-charles.us-west1-a.securethebox.us,gitlab-charles.us-west1-a.securethebox.us"
+            value: "securethebox.us,us-west1-a.securethebox.us,jenkins-{userName}.us-west1-a.securethebox.us,gitlab-{userName}.us-west1-a.securethebox.us"
           - name: DOMAINS
-            value: "securethebox.us,us-west1-a.securethebox.us,jenkins-charles.us-west1-a.securethebox.us,gitlab-charles.us-west1-a.securethebox.us"
+            value: "securethebox.us,us-west1-a.securethebox.us,jenkins-{userName}.us-west1-a.securethebox.us,gitlab-{userName}.us-west1-a.securethebox.us"
           - name: AUTH_HOST
             value: "auth.securethebox.us"
           - name: DEFAULT_ACTION
@@ -60,7 +60,7 @@ spec:
           path: /var/run/docker.sock
               """
 
-    with open('./app_controllers/infrastructure/kubernetes-deployments/authentication/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/authentication/'+str(sys.argv[2])+'/01_deployment-'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

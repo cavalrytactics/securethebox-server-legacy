@@ -1,0 +1,58 @@
+
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: auth
+  labels:
+    app: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+      - name: auth
+        image: thomseddon/traefik-forward-auth:2
+        env:
+          - name: PROVIDERS_GOOGLE_CLIENT_ID
+            value: "622501345065-1iqrldk5iqg33hq6fag500p364j94ljo.apps.googleusercontent.com"
+          - name: PROVIDERS_GOOGLE_CLIENT_SECRET
+            value: "PFxqCSPdxXXN8-sMPW-5J_hw"
+          - name: SECRET
+            value: "random"
+          - name: INSECURE_COOKIE
+            value: "true"
+          - name: COOKIE_DOMAINS
+            value: "securethebox.us,us-west1-a.securethebox.us,jenkins-charles.us-west1-a.securethebox.us,gitlab-charles.us-west1-a.securethebox.us"
+          - name: DOMAINS
+            value: "securethebox.us,us-west1-a.securethebox.us,jenkins-charles.us-west1-a.securethebox.us,gitlab-charles.us-west1-a.securethebox.us"
+          - name: AUTH_HOST
+            value: "auth.securethebox.us"
+          - name: DEFAULT_ACTION
+            value: "allow"
+          - name: WHITELIST
+            value: "jidokaus@gmail.com,service-account@securethebox.iam.gserviceaccount.com"
+        ports:
+          - containerPort: 4181
+            protocol: TCP
+        livenessProbe:
+            tcpSocket:
+              port: 4181
+            initialDelaySeconds: 20
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 10
+            timeoutSeconds: 2
+        volumeMounts:
+          - name: dockersock
+            mountPath: "/var/run/docker.sock"
+      volumes:
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock
+              

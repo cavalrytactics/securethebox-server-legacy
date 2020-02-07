@@ -75,106 +75,10 @@ from google.auth import impersonated_credentials
 import google.auth.crypt
 import google.auth.jwt
 import time
+import os
 
-readgoogleClientId = open('./app_controllers/secrets/googleClientId.txt','r')
-googleClientId = readgoogleClientId.read().rstrip('\n')
-readgoogleClientSecret = open('./app_controllers/secrets/googleClientSecret.txt','r')
-googleClientSecret = readgoogleClientSecret.read().rstrip('\n')
-
-def generate_jwt(sa_keyfile='./app_controllers/secrets/serviceAccount.json',
-                 sa_email='service-account@securethebox.iam.gserviceaccount.com',
-                 audience='https://www.googleapis.com/oauth2/v4/token',
-                 expiry_length=3600):
-
-    """Generates a signed JSON Web Token using a Google API Service Account."""
-
-    now = int(time.time())
-
-    # build payload
-    payload = {
-        'iat': now,
-        # expires after 'expiry_length' seconds.
-        "exp": now + expiry_length,
-        # iss must match 'issuer' in the security configuration in your
-        # swagger spec (e.g. service account email). It can be any string.
-        'iss': sa_email,
-        # aud must be either your Endpoints service name, or match the value
-        # specified as the 'x-google-audience' in the OpenAPI document.
-        'aud':  audience,
-        # sub and email should match the service account's email address
-        'sub': sa_email,
-        'email': sa_email
-    }
-
-    # sign with keyfile
-    signer = google.auth.crypt.RSASigner.from_service_account_file(sa_keyfile)
-    jwt = google.auth.jwt.encode(signer, payload)
-
-    return jwt
-
-
-def checkStatus(serviceName, userName, clusterName):
-    print("Checking status....")
-    serviceStatus = True
-    while serviceStatus:
-        time.sleep(1)
-        if serviceName == 'traefik':
-            credentials = service_account.Credentials.from_service_account_file('./app_controllers/secrets/serviceAccount.json')
-            # scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/userinfo.profile','https://www.googleapis.com/auth/userinfo.email'])
-            target_credentials = impersonated_credentials.Credentials(
-                source_credentials=credentials,
-                target_principal='service-account@securethebox.iam.gserviceaccount.com',
-                target_scopes = ['https://www.googleapis.com/auth/userinfo.profile','https://www.googleapis.com/auth/userinfo.email'],
-                lifetime=3600)
-            # subject_credentials = credentials.with_subject('service-status@securethebox.iam.gserviceaccount.com')
-            # print("CREDENTIALS:",subject_credentials)
-            authed_session = AuthorizedSession(target_credentials)
-            print("AUTHORIZED:", authed_session)
-            print("URL:",'http://'+str(serviceName)+'.'+str(clusterName)+'.securethebox.us:8080/')
-            response = authed_session.get(
-                'http://'+str(serviceName)+'.'+str(clusterName)+'.securethebox.us:8080/')
-            # print("RESPONSE:",response.text)
-            # signed_jwt = generate_jwt(audience='http://'+str(serviceName)+'.'+str(clusterName)+'.securethebox.us:8080/')
-            # print(signed_jwt)
-            # headers = {
-            #     'Authorization': 'Bearer {}'.format(signed_jwt.decode('utf-8')),
-            #     'content-type': 'application/json'
-            # }
-            # response = requests.get('http://'+str(serviceName)+'.'+str(clusterName)+'.securethebox.us:8080/', headers=headers, allow_redirects=True)
-            # response.raise_for_status()
-            # print("RESPONSE:",response.url)
-            if response.status_code == 200:
-                serviceStatus = False
-                print(response.status_code,"out of loop")
-                pass
-        else:
-            credentials = service_account.Credentials.from_service_account_file('./app_controllers/secrets/serviceAccount.json')
-            # scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/userinfo.profile','https://www.googleapis.com/auth/userinfo.email'])
-            target_credentials = impersonated_credentials.Credentials(
-                source_credentials=credentials,
-                target_principal='service-account@securethebox.iam.gserviceaccount.com',
-                target_scopes = ['https://www.googleapis.com/auth/userinfo.profile','https://www.googleapis.com/auth/userinfo.email'],
-                lifetime=3600)
-            # print("CREDENTIALS:",target_credentials)
-            authed_session = AuthorizedSession(target_credentials)
-            print("AUTHORIZED:", authed_session)
-            print("URL:",'http://'+str(serviceName)+'-'+str(userName)+'.'+str(clusterName)+'.securethebox.us/')
-            response = authed_session.request("GET",
-                'http://'+str(serviceName)+'-'+str(userName)+'.'+str(clusterName)+'.securethebox.us/')
-            # print("RESPONSE:",response.text)
-            # signed_jwt = generate_jwt(audience='http://'+str(serviceName)+'-'+str(userName)+'.'+str(clusterName)+'.securethebox.us/')
-            # print(signed_jwt)
-            # headers = {
-            #     'Authorization': 'Bearer {}'.format(signed_jwt.decode('utf-8')),
-            #     'content-type': 'application/json'
-            # }
-            # response = requests.get('http://'+str(serviceName)+'-'+str(userName)+'.'+str(clusterName)+'.securethebox.us/', headers=headers, allow_redirects=True)
-            # response.raise_for_status()
-            # print("RESPONSE:",response.url)
-            if response.status_code == 200:
-                serviceStatus = False
-                print(response.status_code,"out of loop")
-                pass
+googleClientId = os.getenv("GOOGLE_CLIENT_ID")
+googleClientSecret = os.getenv("GOOGLE_CLIENT_SECRET")
         
 
 def checkStatusDocker(serviceName, userName, clusterName):
@@ -199,6 +103,14 @@ def checkStatusDocker(serviceName, userName, clusterName):
             print("Pod not up yet...")
 
 def challengesManageChallenge1(clusterName, userName, action, emailAddress):
+    print(action,"Challenge 1",clusterName,userName)
+    currentPath  = os.getcwd()
+    if action == 'apply':
+        print()
+    elif action = 'delete':
+        print()
+
+def challengesManageChallenge1_original(clusterName, userName, action, emailAddress):
     print(action,"Challenge 1",clusterName,userName)
     currentPath  = os.getcwd()
     if action == 'apply':

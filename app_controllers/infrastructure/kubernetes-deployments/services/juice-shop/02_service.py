@@ -6,6 +6,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {serviceName}-{userName}
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: {serviceName}-{userName}.{clusterName}.securethebox.us
 spec:
   selector:
     app: {serviceName}-{userName}
@@ -18,7 +20,7 @@ spec:
     port: 9000
               """
 
-    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/02_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-service.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/services/'+str(sys.argv[2])+'/02_service-'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 

@@ -28,7 +28,7 @@ spec:
             servicePort: admin
               """
 
-    with open('./app_controllers/infrastructure/kubernetes-deployments/ingress/'+str(sys.argv[2])+'/06_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-ingress.yml', 'w') as yfile:
+    with open('./app_controllers/infrastructure/kubernetes-deployments/ingress/'+str(sys.argv[2])+'/06_ingress-'+str(sys.argv[1])+'-'+str(sys.argv[2])+'.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 
