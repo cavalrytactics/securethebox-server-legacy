@@ -11,11 +11,13 @@
     "unencryptedFileNames": ["securethebox-service-account.json","securethebox-travis-ci-account.json"],
     "environmentVariablesList": ["APPENV","SKIPKUBE","GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
     "googleProjectId": "securethebox-server",
-    "googleKubernetesComputeZone": "us-west1-a",
+    "googleKubernetesComputeZone": "us-west2-a",
     "googleKubernetesComputeCluster": "test",
-    "googleKubernetesComputeRegion": "us-west1",
+    "googleKubernetesComputeRegion": "us-west2",
     "googleServiceAccountEmail": "securethebox-server-sa@securethebox-server.iam.gserviceaccount.com",
     "googleServiceAccountFile": "securethebox-service-account.json",
+    "googleAppEngineServiceAccountEmail": "securethebox-server-travis-ci@securethebox-server.iam.gserviceaccount.com",
+    "googleAppEngineServiceAccountFile": "securethebox-travis-ci-account.json",
     "localKubernetesCluster": "docker-desktop",
-    "testProdKubernetesCluster": "gke_securethebox_us-west1-a_test"
+    "testProdKubernetesCluster": "gke_securethebox_us-west2-a_test"
 }

@@ -9,28 +9,18 @@ from kubernetes import client, config
 import re
 import shutil
 
-class KubernetesController():
+class GoogleAppEngineController():
     def __init__(self):
         self.podId = ""
         self.currentDirectory = ""
         self.serviceName = ""
         self.userName = ""
-        self.kubectlAction = ""
         self.fileName = ""
         self.encryptedEnvironmentVariables = {}
-        self.kubernetesDeploymentImage = ""
-        self.kubernetesDeploymentName = ""
-        self.kubernetesHost = ""
         self.googleProjectId = ""
         self.googleCredentials = ""
-        self.googleKubernetesComputeZone = ""
-        self.googleKubernetesComputeCluster = ""
-        self.googleKubernetesComputeRegion = ""
-        self.googleKubernetesClusterOperationInfo = ""
         self.googleServiceAccountEmail = ""
-        self.challengeId = "0000"
-        self.challengeGroupId = "1234"
-        self.kubernetesPodId = ""
+        self.region = ""
 
     def setFileName(self, fileName):
         try:
@@ -161,4 +151,47 @@ class KubernetesController():
         except:
             return False
 
+    def setGoogleRegion(self, region):
+        try:
+            self.region = region
+            return True
+        except:
+            return False
+
+    def setGoogleServiceAccountEmail(self, googleServiceAccountEmail):
+        try:
+            self.googleServiceAccountEmail = googleServiceAccountEmail
+            return True
+        except:
+            return False
+
+    def loadGoogleServiceAccount(self):
+        try:
+            subprocess.Popen(
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName} >> /dev/null 2>&1"], shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud config set account {self.googleServiceAccountEmail} >> /dev/null 2>&1"], shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud config set compute/region us-west2 >> /dev/null 2>&1"], shell=True).wait()
+            subprocess.Popen(
+                [f"gcloud config set compute/zone us-west2-a >> /dev/null 2>&1"], shell=True).wait()
+            return True
+        except:
+            return False
+
+    def createApp(self):
+        try:
+            subprocess.Popen(
+                [f"gcloud app create --region=us-west2 --project=securethebox-server"], shell=True).wait()
+            return True
+        except:
+            return False
+
+    def deployApp(self):
+        try:
+            subprocess.Popen(
+                [f"echo y | gcloud app deploy"], shell=True).wait()
+            return True
+        except:
+            return False
    

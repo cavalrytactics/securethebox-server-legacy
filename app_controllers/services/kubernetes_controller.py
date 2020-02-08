@@ -74,7 +74,7 @@ class KubernetesController():
                         with open("./.travis.yml", "r") as f:
                             dep = yaml.safe_load(f)
                             finalDecryptCommand = decryptCommand.replace(
-                                f"./app_controllers/secrets/{self.fileName} -d", f"{self.fileName} -d ; cd ../../")
+                                f"./app_controllers/secrets/{self.fileName} -d", f"{self.fileName} -d")
                             if finalDecryptCommand not in dep["jobs"]["include"][0]["before_install"]:
                                 dep["jobs"]["include"][0]["before_install"].append(
                                     finalDecryptCommand)
