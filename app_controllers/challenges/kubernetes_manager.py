@@ -1,6 +1,13 @@
 from ..services.kubernetes_controller import KubernetesController
 import os
 import time
+import json
+
+globalData = []
+
+with open(str(os.getcwd())+"/app_controllers/challenges/globalData.json", "r") as f:
+    globalData = json.load(f)
+
 kc = KubernetesController()
 
 globalData = {

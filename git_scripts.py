@@ -99,7 +99,7 @@ class GitControl():
 
         elif self.arguments[0] == "git-push-branch-skip":
             self.lintTravisCheck()
-            # self.pytestCheckSkip()
+            self.pytestCheckSkip()
             if self.pytest_result == True and self.lint_travis_result == True:
                 if self.git_current_branch != "master":
                     subprocess.Popen([f"git add ."],shell=True).wait()

@@ -15,7 +15,6 @@ class KubernetesController():
         self.currentDirectory = ""
         self.serviceName = ""
         self.userName = ""
-        self.emailAddress = ""
         self.kubectlAction = ""
         self.fileName = ""
         self.encryptedEnvironmentVariables = {}
@@ -56,7 +55,7 @@ class KubernetesController():
 
             elif fileExists == True:
                 process = subprocess.Popen(
-                    [f"echo 'yes' | travis encrypt-file -f -p ./app_controllers/secrets/{self.fileName}"], stdout=subprocess.PIPE, shell=True)
+                    [f"echo 'yes' | travis encrypt-file --org -f -p ./app_controllers/secrets/{self.fileName}"], stdout=subprocess.PIPE, shell=True)
                 finished = True
                 keyVariableKEY = ""
                 keyVariableVALUE = ""
@@ -226,7 +225,6 @@ class KubernetesController():
         try:
             fileList = ["01_permissions", "02_cluster-role",
                         "03_config", "04_deployment", "05_service", "06_ingress"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
                 subprocess.Popen(
@@ -242,7 +240,6 @@ class KubernetesController():
     def generateServiceYamlFiles(self):
         try:
             fileList = ["01_deployment", "02_service", "03_ingress"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
                 subprocess.Popen(
@@ -258,7 +255,6 @@ class KubernetesController():
     def generateAuthenticationYamlFiles(self):
         try:
             fileList = ["01_deployment", "02_service", "03_ingress"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/authentication/{self.serviceName}/{file}"
                 subprocess.Popen(
@@ -274,7 +270,6 @@ class KubernetesController():
     def generateStorageYamlFiles(self):
         try:
             fileList = ["01_persistent-volume", "02_persistent-volume-claim"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/{file}"
                 subprocess.Popen(
@@ -290,7 +285,6 @@ class KubernetesController():
     def generateDnsYamlFiles(self):
         try:
             fileList = ["01_cluster-role", "02_deployment"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/dns/external-dns/{file}"
                 subprocess.Popen(
@@ -307,7 +301,6 @@ class KubernetesController():
         try:
             fileList = ["01_permissions", "02_cluster-role",
                         "03_config", "04_deployment", "05_service", "06_ingress"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/ingress/{self.serviceName}/{file}"
                 try:
@@ -326,7 +319,6 @@ class KubernetesController():
     def deleteServiceYamlFiles(self):
         try:
             fileList = ["01_deployment", "02_service", "03_ingress"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/services/{self.serviceName}/{file}"
                 try:
@@ -364,7 +356,6 @@ class KubernetesController():
     def deleteDnsYamlFiles(self):
         try:
             fileList = ["01_cluster-role", "02_deployment"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/dns/external-dns/{file}"
                 try:
@@ -383,7 +374,6 @@ class KubernetesController():
     def deleteStorageYamlFiles(self):
         try:
             fileList = ["01_persistent-volume", "02_persistent-volume-claim"]
-            currentDirectory = self.currentDirectory
             for file in fileList:
                 fullFilePath = f"{self.currentDirectory}/app_controllers/infrastructure/kubernetes-deployments/storage/challenges/{file}"
                 try:
@@ -447,7 +437,7 @@ class KubernetesController():
     def createGoogleKubernetesCluster(self):
         try:
             subprocess.Popen(
-                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"], shell=True).wait()
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName} >> /dev/null 2>&1"], shell=True).wait()
             subprocess.Popen(
                 [f"gcloud config set account {self.googleServiceAccountEmail}"], shell=True).wait()
             subprocess.Popen([f"gcloud container \
@@ -472,11 +462,11 @@ class KubernetesController():
     def getGoogleKubernetesClusterCredentials(self):
         try:
             subprocess.Popen(
-                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"], shell=True).wait()
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName} >> /dev/null 2>&1"], shell=True).wait()
             subprocess.Popen(
                 [f"gcloud config set account {self.googleServiceAccountEmail}"], shell=True).wait()
             subprocess.Popen(
-                [f"gcloud container clusters get-credentials {self.googleKubernetesComputeCluster}"], shell=True).wait()
+                [f"gcloud container clusters get-credentials {self.googleKubernetesComputeCluster} --project {self.googleProjectId}"], shell=True).wait()
             return True
         except:
             return False
@@ -484,11 +474,11 @@ class KubernetesController():
     def deleteGoogleKubernetesCluster(self):
         try:
             subprocess.Popen(
-                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName}"], shell=True).wait()
+                [f"gcloud auth activate-service-account --key-file {self.currentDirectory}/app_controllers/secrets/{self.fileName} >> /dev/null 2>&1"], shell=True).wait()
             subprocess.Popen(
                 [f"gcloud config set account {self.googleServiceAccountEmail}"], shell=True).wait()
             subprocess.Popen(
-                [f"echo \"y\" | gcloud container clusters delete {self.googleKubernetesComputeCluster}"], stdout=subprocess.PIPE, shell=True).wait()
+                [f"echo \"y\" | gcloud container clusters delete {self.googleKubernetesComputeCluster} --project {self.googleProjectId}"], stdout=subprocess.PIPE, shell=True).wait()
             return True
         except:
             return False

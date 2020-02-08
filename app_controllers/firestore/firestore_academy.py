@@ -9,9 +9,14 @@ from ..academy.step import Step
 from ..academy.steps import Steps
 import sys
 import uuid
+import os
 
-# Use a service account
-cred = credentials.Certificate('./config/dev.json')
+APPENV = os.getenv("APPENV")
+if APPENV == "DEV":
+    # Use a service account
+    cred = credentials.Certificate('./config/dev.json')
+if APPENV == "PROD":
+    cred = credentials.Certificate('./config/prod.json')
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()
