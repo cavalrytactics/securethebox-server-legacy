@@ -1,0 +1,41 @@
+version: "3.7"
+services:
+  traefik:
+    image: "traefik:1.7"
+    container_name: "traefik"
+    command: -c /traefik.toml --logLevel=DEBUG
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "./src/app_controllers/infrastructure/kubernetes-deployments/ingress/traefik/traefik.toml:/traefik.toml"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  auth:
+    image: thomseddon/traefik-forward-auth:2
+    environment:
+      - CLIENT_ID=1021667731798-pguj73smqamr5bpa4j67pj58tbht3je3.apps.googleusercontent.com
+      - CLIENT_SECRET=pNG24wdI7cvXH1dT-5mhc2lX
+      - SECRET=random
+      - INSECURE_COOKIE=true
+      - DOMAIN=securethebox.us
+      - AUTH_HOST=auth.securethebox.us
+    labels:
+      - traefik.enable=true
+      - traefik.port=4181
+      - traefik.backend=auth
+      - traefik.frontend.rule=Host:auth.securethebox.us
+    depends_on:
+      - traefik
+  securethebox-server:
+    image: cavalrytactics/securethebox-server:latest
+    restart: always
+    depends_on:
+      - traefik
+    environment:
+      - APPENV=PROD
+      - SKIPKUBE=NO
+    ports:
+      - "5000:5000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:securethebox-server-charles.docker-desktop.securethebox.us"

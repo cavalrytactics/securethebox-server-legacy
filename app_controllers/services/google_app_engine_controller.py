@@ -194,4 +194,11 @@ class GoogleAppEngineController():
             return True
         except:
             return False
-   
+
+    def readAppLogs(self):
+        try:
+            subprocess.Popen(
+                [f"gcloud app logs read"], shell=True).wait()
+            return True
+        except:
+            return False
